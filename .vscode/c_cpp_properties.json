@@ -31,8 +31,8 @@
                 "${nrfSDK}/integration/nrfx/legacy",
                 "${nrfSDK}/components/libraries/delay",
                 "${nrfSDK}/modules/nrfx/drivers/include",
-                "${workspaceFolder}/sparkfun/blank/config",
-                "${workspaceFolder}/sparkfun/blank"
+                "${workspaceFolder}/sparkfun_nrf52840_mini/blank/config/",
+                "${workspaceFolder}/sparkfun_nrf52840_mini/blank"
             ],
             "defines": [
                 "_DEBUG",
@@ -45,7 +45,7 @@
                 "NRF52840_XXAA",
                 "DCONFIG_NFCT_PINS_AS_GPIOS"
             ],
-            "compilerPath": "C:\\Program Files (x86)\\GNU Tools ARM Embedded\\7 2018-q2-update\\bin\\arm-none-eabi-gcc.exe",
+            "compilerPath": "C:\\Program Files (x86)\\GNU ARM Embedded Toolchain\\9 2020-q2-update\\bin\\arm-none-eabi-gcc.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64"
