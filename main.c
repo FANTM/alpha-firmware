@@ -52,13 +52,18 @@
 #include "nrf_drv_clock.h"
 #include "app_error.h"
 #include "nrf_spi_mngr.h"
-#include "st7565LCD.h"
 #include "bsp.h"
-
+#include "nrf_delay.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
+
+#include "icm20948.h"
+
+
+
+//#define NRF_LOG_MODULE_NAME FANTM
 
 #if defined( __GNUC__ ) && (__LINT__ == 0)
     // This is required if one wants to use floating-point values in 'printf'
@@ -67,7 +72,7 @@
     __ASM(".global _printf_float");
 #endif
 
-APP_TIMER_DEF(m_timer);
+APP_TIMER_DEF(appTimer);
 
 
 static void lfclk_config(void)
@@ -79,44 +84,38 @@ static void lfclk_config(void)
 
     nrf_drv_clock_lfclk_request(NULL);
 }
-
-static void bsp_event_handler(bsp_event_t event)
-{
+ 
+static void timerHandler(void * p_context) {
+    //NRF_LOG_INFO("DATA: %d\n\r", checkData());
     return;
 }
 
+static void initTimer(void) {
+    ret_code_t errCode;
 
-static void timer_handler(void * p_context)
-{
-    return;
+    errCode = app_timer_init();
+    APP_ERROR_CHECK(errCode);
+    
+    errCode = app_timer_create(&appTimer, 
+        APP_TIMER_MODE_REPEATED, 
+        timerHandler);
+    APP_ERROR_CHECK(errCode);
+
+    errCode = app_timer_start(appTimer, APP_TIMER_TICKS(1000), NULL);
+    APP_ERROR_CHECK(errCode);
+
 }
-
-
-static void timer_interrupt_init(void)
-{
-    ret_code_t err_code;
-
-    err_code = app_timer_create(&m_timer, APP_TIMER_MODE_REPEATED, timer_handler);
-    APP_ERROR_CHECK(err_code);
-
-    err_code = app_timer_start(m_timer, APP_TIMER_TICKS(1000), NULL);
-    APP_ERROR_CHECK(err_code);
-}
-
 
 int main(void)
 {
     APP_ERROR_CHECK(NRF_LOG_INIT(NULL));
     NRF_LOG_DEFAULT_BACKENDS_INIT();
-
+    NRF_LOG_INFO("Start Boot \n\r");
     lfclk_config();
-    APP_ERROR_CHECK(app_timer_init());
-    timer_interrupt_init();
+    initTimer();
     APP_ERROR_CHECK(nrf_pwr_mgmt_init());
-    APP_ERROR_CHECK(bsp_init(BSP_INIT_BUTTONS, bsp_event_handler));
-
+    APP_ERROR_CHECK(initIcm20948());
     NRF_LOG_INFO("SPI transaction manager example started. \n\r");
-
     while (true)
     {
         nrf_pwr_mgmt_run();

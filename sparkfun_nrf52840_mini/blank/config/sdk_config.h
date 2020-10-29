@@ -402,7 +402,7 @@
 // <e> NRFX_SPIM_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef NRFX_SPIM_CONFIG_LOG_ENABLED
-#define NRFX_SPIM_CONFIG_LOG_ENABLED 0
+#define NRFX_SPIM_CONFIG_LOG_ENABLED 1
 #endif
 // <o> NRFX_SPIM_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -506,7 +506,7 @@
 // <e> NRFX_SPI_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef NRFX_SPI_CONFIG_LOG_ENABLED
-#define NRFX_SPI_CONFIG_LOG_ENABLED 0
+#define NRFX_SPI_CONFIG_LOG_ENABLED 1
 #endif
 // <o> NRFX_SPI_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -1472,7 +1472,7 @@
 #endif
 // <o> NRF_LOG_BACKEND_UART_TX_PIN - UART TX pin 
 #ifndef NRF_LOG_BACKEND_UART_TX_PIN
-#define NRF_LOG_BACKEND_UART_TX_PIN 6
+#define NRF_LOG_BACKEND_UART_TX_PIN 22
 #endif
 
 // <o> NRF_LOG_BACKEND_UART_BAUDRATE  - Default Baudrate
@@ -1594,7 +1594,7 @@
 // <i> Log data is buffered and can be processed in idle.
 
 #ifndef NRF_LOG_DEFERRED
-#define NRF_LOG_DEFERRED 1
+#define NRF_LOG_DEFERRED 0
 #endif
 
 // <q> NRF_LOG_FILTERS_ENABLED  - Enable dynamic filtering of logs.
@@ -1880,7 +1880,7 @@
 // <e> CLOCK_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef CLOCK_CONFIG_LOG_ENABLED
-#define CLOCK_CONFIG_LOG_ENABLED 0
+#define CLOCK_CONFIG_LOG_ENABLED 1
 #endif
 // <o> CLOCK_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -2448,7 +2448,7 @@
 // <e> RTC_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef RTC_CONFIG_LOG_ENABLED
-#define RTC_CONFIG_LOG_ENABLED 0
+#define RTC_CONFIG_LOG_ENABLED 1
 #endif
 // <o> RTC_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -3031,7 +3031,7 @@
 // <e> APP_TIMER_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef APP_TIMER_CONFIG_LOG_ENABLED
-#define APP_TIMER_CONFIG_LOG_ENABLED 0
+#define APP_TIMER_CONFIG_LOG_ENABLED 1
 #endif
 // <o> APP_TIMER_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -3927,7 +3927,7 @@
 // <e> NRF_PWR_MGMT_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef NRF_PWR_MGMT_CONFIG_LOG_ENABLED
-#define NRF_PWR_MGMT_CONFIG_LOG_ENABLED 0
+#define NRF_PWR_MGMT_CONFIG_LOG_ENABLED 1
 #endif
 // <o> NRF_PWR_MGMT_CONFIG_LOG_LEVEL  - Default Severity level
  

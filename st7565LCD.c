@@ -37,7 +37,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
+/*
 #include "st7565LCD.h"
 #include "app_util_platform.h"
 #include "nrf_delay.h"
@@ -401,3 +401,4 @@ void st7565_display_invert(bool invert)
     APP_ERROR_CHECK(nrf_spi_mngr_schedule(&m_nrf_spi_mngr, &transaction_cmd[invert]));
 }
 
+*/

@@ -58,7 +58,7 @@ SRC_FILES += \
   $(SDK_ROOT)/external/thedotfactory_fonts/orkney24pts.c \
   $(SDK_ROOT)/external/thedotfactory_fonts/orkney8pts.c \
   $(PROJ_DIR)/main.c \
-  $(PROJ_DIR)/st7565LCD.c \
+  $(PROJ_DIR)/icm20948.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_Syscalls_GCC.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
@@ -209,4 +209,4 @@ mount-nrf:
 
 uf2bootload: $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex dfu-package
 	uf2conv.py -f 0xADA52840 -c -o _build/nrf52840_xxaa.uf2 _build/nrf52840_xxaa.hex
-	cp _build/nrf52840_xxaa.uf2 /mnt/f/
+#	cp _build/nrf52840_xxaa.uf2 /mnt/f/

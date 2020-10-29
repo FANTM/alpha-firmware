@@ -6,4 +6,6 @@
  */
 ret_code_t initIcm20948(void);
 
+uint8_t checkData();
+
 #endif
