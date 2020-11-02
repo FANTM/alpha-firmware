@@ -55,15 +55,17 @@
 #include "bsp.h"
 #include "nrf_delay.h"
 
-#include "nrf_log.h"
-#include "nrf_log_ctrl.h"
+
 #include "nrf_log_default_backends.h"
 
 #include "icm20948.h"
 
+#define NRF_LOG_MODULE_NAME fantm
+#define NRF_LOG_LEVEL       6
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+NRF_LOG_MODULE_REGISTER();
 
-
-//#define NRF_LOG_MODULE_NAME FANTM
 
 #if defined( __GNUC__ ) && (__LINT__ == 0)
     // This is required if one wants to use floating-point values in 'printf'
@@ -87,6 +89,9 @@ static void lfclk_config(void)
  
 static void timerHandler(void * p_context) {
     //NRF_LOG_INFO("DATA: %d\n\r", checkData());
+    getAccelerationX();
+    getAccelerationY();
+    getAccelerationZ();
     return;
 }
 

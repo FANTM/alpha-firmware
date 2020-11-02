@@ -19,12 +19,12 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_str_formatter.c \
   $(SDK_ROOT)/components/boards/boards.c \
-  $(SDK_ROOT)/components/libraries/button/app_button.c \
   $(SDK_ROOT)/components/libraries/util/app_error.c \
   $(SDK_ROOT)/components/libraries/util/app_error_handler_gcc.c \
   $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
   $(SDK_ROOT)/components/libraries/scheduler/app_scheduler.c \
   $(SDK_ROOT)/components/libraries/timer/app_timer2.c \
+  $(SDK_ROOT)/components/libraries/fifo/app_fifo.c \
   $(SDK_ROOT)/components/libraries/util/app_util_platform.c \
   $(SDK_ROOT)/components/libraries/timer/drv_rtc.c \
   $(SDK_ROOT)/components/libraries/util/nrf_assert.c \
@@ -55,15 +55,11 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spim.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
-  $(SDK_ROOT)/external/thedotfactory_fonts/orkney24pts.c \
-  $(SDK_ROOT)/external/thedotfactory_fonts/orkney8pts.c \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/icm20948.c \
-  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
-  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_Syscalls_GCC.c \
-  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
 
+#$(SDK_ROOT)/components/libraries/mem_manager/mem_manager.c \
 # Include folders common to all targets
 INC_FOLDERS += \
   $(SDK_ROOT)/components \
@@ -78,6 +74,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/util \
   ../config \
   $(SDK_ROOT)/components/libraries/balloc \
+  $(SDK_ROOT)/components/libraries/mem_manager \
   $(SDK_ROOT)/components/libraries/ringbuf \
   $(SDK_ROOT)/modules/nrfx/hal \
   $(SDK_ROOT)/components/libraries/bsp \
@@ -90,8 +87,8 @@ INC_FOLDERS += \
   $(PROJ_DIR) \
   $(SDK_ROOT)/components/libraries/gfx \
   $(SDK_ROOT)/components/libraries/delay \
-  $(SDK_ROOT)/external/segger_rtt \
   $(SDK_ROOT)/components/libraries/atomic_fifo \
+  $(SDK_ROOT)/components/libraries/fifo \
   $(SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd \
   $(SDK_ROOT)/components/libraries/atomic \
   $(SDK_ROOT)/components/libraries/sortlist \
@@ -121,7 +118,7 @@ CFLAGS += -DNRF52840_XXAA
 CFLAGS += -DBOARD_SPARKFUN_NRF52840_MINI
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
-CFLAGS += -Wall -Werror
+CFLAGS += -Wall #-Werror
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # keep every function in a separate section, this allows linker to discard unused ones
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing

@@ -48,6 +48,17 @@
 #endif
 // <h> nRF_Drivers 
 
+//==================
+// FANTM
+//==================
+// #ifndef MEM_MANAGER_ENABLED
+// #define MEM_MANAGER_ENABLED 1
+// #endif
+
+#ifndef MEM_MANAGER_ENABLED
+#define APP_FIFO_ENABLED 1
+#endif
+
 //==========================================================
 // <e> GPIOTE_ENABLED - nrf_drv_gpiote - GPIOTE peripheral driver - legacy layer
 //==========================================================
