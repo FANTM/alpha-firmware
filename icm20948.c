@@ -78,6 +78,10 @@ typedef struct HandlerParameters_t {
     uint8_t reg2;
 } HandlerParameters_t;
 
+static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t *data);
+static ret_code_t readICM(Reg_t *reg, Bank_t bank,  nrf_spi_mngr_transaction_t *transaction) ;
+static void accelHandler(ret_code_t resultCode, void *userData);
+
 static uint8_t accelBuff[WINDOW_SIZE];
 static uint8_t gyroBuff[WINDOW_SIZE];
 static uint8_t magBuff[WINDOW_SIZE];
@@ -98,10 +102,14 @@ static uint8_t recvBuff[] = {
     0xff, 0xff, 0xff, 0xff
 };
 
-static Bank_t activeBank = BANK_0;  // Device boots into bank 0
+static nrf_spi_mngr_transfer_t readTransfers[] =  {
+        NRF_SPI_MNGR_TRANSFER(cmdBuff, 1, recvBuff, 2),
+        NRF_SPI_MNGR_TRANSFER(&(cmdBuff[1]), 1, &(recvBuff[2]), 2)
+};
 
-static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t *data);
-static ret_code_t readICM(Reg_t *reg, Bank_t bank, bool isWord, void (*handler)());
+
+
+static Bank_t activeBank = BANK_0;  // Device boots into bank 0
 
 static ret_code_t initDataStore(void) {
     ret_code_t errCode;
@@ -157,7 +165,11 @@ static void genericEndReadHandler(ret_code_t resultCode, void * userData) {
 static void accelHandler(ret_code_t resultCode, void *userData) {
     NRF_LOG_INFO("Result: %d", resultCode);
     NRF_LOG_INFO("Returned data: %d %d %d %d", recvBuff[0], recvBuff[1], recvBuff[2], recvBuff[3]);
-    NRF_LOG_INFO("Combined value: %d\n\r", (uint16_t) ((recvBuff[1] << 8) | recvBuff[3]));
+    int16_t raw = (recvBuff[1] << 8) | recvBuff[3];
+    //double adjG = ((double) raw) * 0.00059855; //16384;
+    //double accel = adjG * 9.80665;
+
+    NRF_LOG_INFO("Combined value: %d\n\r", raw);
     free(userData);
     return;
 }
@@ -182,8 +194,8 @@ static ret_code_t wakeUpICM(void) {
     Reg_t pwrMgmt;
     pwrMgmt.reg0 = PWR_MGMT_1;
     uint8_t bitmask[] = {2,2,2,2,2,2,0,2};
-    writeICM(&pwrMgmt, BANK_0, bitmask);
-    return readICM(&pwrMgmt, BANK_0, false, genericEndReadHandler);
+    return writeICM(&pwrMgmt, BANK_0, bitmask);
+    //return readICM(&pwrMgmt, BANK_0, , genericEndReadHandler);
 }
 
 static ret_code_t sleepICM(void) {
@@ -193,45 +205,42 @@ static ret_code_t sleepICM(void) {
     return writeICM(&pwrMgmt, BANK_0, bitmask);
 }
 
-static ret_code_t configICM(void) {
+static ret_code_t configUserCtrl(void) {
     Reg_t config;
     config.reg0 = USER_CTRL;
     uint8_t bitmask[] = {2, 2, 2, 2, 1, 2, 1, 1};
     return writeICM(&config, BANK_0, bitmask);
 }
 
-static ret_code_t readICM(Reg_t *reg, Bank_t bank, bool isWord, void (*handler)()) {
-    const int size = isWord ? 2 : 1;
+static ret_code_t configFifo(void) {
+    Reg_t config;
+    config.reg0 = USER_CTRL;
+    uint8_t bitmask[] = {2, 2, 2, 2, 1, 2, 1, 1};
+    return writeICM(&config, BANK_0, bitmask);
+}
+
+static ret_code_t configICM(void) {
+    ret_code_t errCode;
+
+    if ((errCode = configUserCtrl()) != NRF_SUCCESS) 
+        return errCode;
+    
+    return errCode;
+}
+
+static ret_code_t readICM(Reg_t *reg, Bank_t bank,  
+                            nrf_spi_mngr_transaction_t *transaction) {
     if (bank != activeBank) {
         changeBank(activeBank, bank);
     }
 
     HandlerParameters_t *params = (HandlerParameters_t *) malloc(sizeof(HandlerParameters_t));
     params->reg1 = (uint8_t)(0x80 | *((uint8_t *)reg));
-    if (isWord)
-        params->reg2 = (uint8_t)(0x80 | (*((uint8_t *)reg) + 1));
-    else
-        params->reg2 = 0;
-    
-    static nrf_spi_mngr_transfer_t cmdTransfers[] =  {
-        NRF_SPI_MNGR_TRANSFER(cmdBuff, 1, recvBuff, 2),
-        NRF_SPI_MNGR_TRANSFER(&(cmdBuff[1]), 1, &(recvBuff[2]), 2)
-    };
+    params->reg2 = (uint8_t)(0x80 | (*((uint8_t *)reg) + 1));
 
-    static nrf_spi_mngr_transaction_t cmdTransaction = {
-        .begin_callback      = startReadHandler,
-        .end_callback        = NULL,
-        .p_user_data         = NULL,
-        .p_transfers         = cmdTransfers,
-        .number_of_transfers = NULL,
-        .p_required_spi_cfg  = NULL
-    };
+    transaction->p_user_data = params;
 
-    cmdTransaction.number_of_transfers = size;
-    cmdTransaction.end_callback = handler;
-    cmdTransaction.p_user_data = params;
-
-    return nrf_spi_mngr_schedule(&spiManager, &cmdTransaction);
+    return nrf_spi_mngr_schedule(&spiManager, transaction);
 }
 
 /**
@@ -244,11 +253,11 @@ static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t *data) {
 
    
     static uint8_t readData[2];
-    static uint8_t cmd[1]; 
-    cmd[0] = (uint8_t)(0x80 | *((uint8_t *)reg));
+    static uint8_t readReg[1]; 
+    readReg[0] = (uint8_t)(0x80 | *((uint8_t *)reg));
 
     static nrf_spi_mngr_transfer_t readTransfer[] =  {
-        NRF_SPI_MNGR_TRANSFER(cmd, 1, readData, 2)
+        NRF_SPI_MNGR_TRANSFER(readReg, 1, readData, 2)
     };
     
     nrf_spi_mngr_perform(&spiManager, NULL, readTransfer, 1, NULL);
@@ -293,25 +302,57 @@ static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t *data) {
 ret_code_t getAccelerationX(void) {
     Reg_t accelReg;
     accelReg.reg0 = ACCEL_X_H;
-    return readICM(&accelReg, BANK_0, true, accelHandler);
+    static nrf_spi_mngr_transaction_t transaction = {
+        .begin_callback      = startReadHandler,
+        .end_callback        = accelHandler,
+        .p_user_data         = NULL,
+        .p_transfers         = readTransfers,
+        .number_of_transfers = 2,
+        .p_required_spi_cfg  = NULL
+    };
+    return readICM(&accelReg, BANK_0, &transaction);
 }
 
 ret_code_t getAccelerationY(void) {
     Reg_t accelReg;
     accelReg.reg0 = ACCEL_Y_H;
-    return readICM(&accelReg, BANK_0, true, accelHandler);
+    static nrf_spi_mngr_transaction_t transaction = {
+        .begin_callback      = startReadHandler,
+        .end_callback        = accelHandler,
+        .p_user_data         = NULL,
+        .p_transfers         = readTransfers,
+        .number_of_transfers = 2,
+        .p_required_spi_cfg  = NULL
+    };
+    return readICM(&accelReg, BANK_0, &transaction);
 }
 
 ret_code_t getAccelerationZ(void) {
     Reg_t accelReg;
     accelReg.reg0 = ACCEL_Z_H;
-    return readICM(&accelReg, BANK_0, true, accelHandler);
+    static nrf_spi_mngr_transaction_t transaction = {
+        .begin_callback      = startReadHandler,
+        .end_callback        = accelHandler,
+        .p_user_data         = NULL,
+        .p_transfers         = readTransfers,
+        .number_of_transfers = 2,
+        .p_required_spi_cfg  = NULL
+    };
+    return readICM(&accelReg, BANK_0, &transaction);
 }
 
 ret_code_t getTemp(void) {
     Reg_t tempReg;
     tempReg.reg0 = TEMP_H;
-    return readICM(&tempReg, BANK_0, true, tempHandler);
+    static nrf_spi_mngr_transaction_t transaction = {
+        .begin_callback      = startReadHandler,
+        .end_callback        = tempHandler,
+        .p_user_data         = NULL,
+        .p_transfers         = readTransfers,
+        .number_of_transfers = 2,
+        .p_required_spi_cfg  = NULL
+    };
+    return readICM(&tempReg, BANK_0, &transaction);
 }
 
 ret_code_t initIcm20948(void) {
@@ -321,6 +362,14 @@ ret_code_t initIcm20948(void) {
     APP_ERROR_CHECK(initDataStore());
     APP_ERROR_CHECK(wakeUpICM());
     APP_ERROR_CHECK(configICM());
-    APP_ERROR_CHECK(readICM(&whoami, BANK_0, false, genericEndReadHandler));
+    static nrf_spi_mngr_transaction_t transaction = {
+        .begin_callback      = startReadHandler,
+        .end_callback        = genericEndReadHandler,
+        .p_user_data         = NULL,
+        .p_transfers         = readTransfers,
+        .number_of_transfers = 1,
+        .p_required_spi_cfg  = NULL
+    };
+    APP_ERROR_CHECK(readICM(&whoami, BANK_0, &transaction));
     return NRF_SUCCESS;
 }
