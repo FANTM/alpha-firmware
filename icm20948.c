@@ -28,6 +28,7 @@ typedef enum Bank_t {
 
 typedef enum RegBank0_t {
     WHO_AM_I = 0x00,
+    USER_CTRL = 0x03,
     PWR_MGMT_1 = 0x06,
     ACCEL_X_H = 0x2D,
     ACCEL_X_L,
@@ -89,11 +90,6 @@ static app_fifo_t tempFifo;
 
 static Data_t dataStore;
 
-static uint8_t cmdAccelBuff[] = {
-    (uint8_t) (0x80 | ACCEL_X_H),
-    (uint8_t) (0x80 | ACCEL_Y_L)
-};
-
 static uint8_t cmdBuff[] = {
     0xff, 0xff
 };
@@ -104,7 +100,7 @@ static uint8_t recvBuff[] = {
 
 static Bank_t activeBank = BANK_0;  // Device boots into bank 0
 
-static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t data);
+static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t *data);
 static ret_code_t readICM(Reg_t *reg, Bank_t bank, bool isWord, void (*handler)());
 
 static ret_code_t initDataStore(void) {
@@ -185,14 +181,23 @@ static ret_code_t changeBank(Bank_t currBank, Bank_t newBank) {
 static ret_code_t wakeUpICM(void) {
     Reg_t pwrMgmt;
     pwrMgmt.reg0 = PWR_MGMT_1;
-    writeICM(&pwrMgmt, BANK_0, 0xBF);
+    uint8_t bitmask[] = {2,2,2,2,2,2,0,2};
+    writeICM(&pwrMgmt, BANK_0, bitmask);
     return readICM(&pwrMgmt, BANK_0, false, genericEndReadHandler);
 }
 
 static ret_code_t sleepICM(void) {
     Reg_t pwrMgmt;
     pwrMgmt.reg0 = PWR_MGMT_1;
-    return writeICM(&pwrMgmt, BANK_0, 0xBF);
+    uint8_t bitmask[] = {2,2,2,2,2,2,1,2};
+    return writeICM(&pwrMgmt, BANK_0, bitmask);
+}
+
+static ret_code_t configICM(void) {
+    Reg_t config;
+    config.reg0 = USER_CTRL;
+    uint8_t bitmask[] = {2, 2, 2, 2, 1, 2, 1, 1};
+    return writeICM(&config, BANK_0, bitmask);
 }
 
 static ret_code_t readICM(Reg_t *reg, Bank_t bank, bool isWord, void (*handler)()) {
@@ -230,9 +235,9 @@ static ret_code_t readICM(Reg_t *reg, Bank_t bank, bool isWord, void (*handler)(
 }
 
 /**
- * Follows read-modify-write convention, data should be a bitmask.
+ * Follows read-modify-write convention, data should be a bitmask of size 8.
  */
-static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t data) {
+static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t *data) {
     if (bank != activeBank) {
         changeBank(activeBank, bank);
     }
@@ -251,7 +256,21 @@ static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t data) {
     HandlerParameters_t *params = (HandlerParameters_t *) malloc(sizeof(HandlerParameters_t));
     
     params->reg1 = 0x7F & *((uint8_t *)reg);   // Turn register into the write version!
-    params->reg2 = data & readData[1];
+    params->reg2 = readData[1];
+    for (int i = 0; i < 8; i++) {
+        switch(data[i]) {
+            case 0:
+            //Clear bit
+            params->reg2 &= ~(1 << i);
+            break;
+            case 1:
+            //Set bit
+            params->reg2 |= 1 << i;
+            break;
+            default:
+            break;
+        }
+    }
 
     static nrf_spi_mngr_transfer_t writeTransfer[] =  {
         NRF_SPI_MNGR_TRANSFER(cmdBuff, 2, NULL, 0)
@@ -274,25 +293,25 @@ static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t data) {
 ret_code_t getAccelerationX(void) {
     Reg_t accelReg;
     accelReg.reg0 = ACCEL_X_H;
-    readICM(&accelReg, BANK_0, true, accelHandler);
+    return readICM(&accelReg, BANK_0, true, accelHandler);
 }
 
 ret_code_t getAccelerationY(void) {
     Reg_t accelReg;
     accelReg.reg0 = ACCEL_Y_H;
-    readICM(&accelReg, BANK_0, true, accelHandler);
+    return readICM(&accelReg, BANK_0, true, accelHandler);
 }
 
 ret_code_t getAccelerationZ(void) {
     Reg_t accelReg;
     accelReg.reg0 = ACCEL_Z_H;
-    readICM(&accelReg, BANK_0, true, accelHandler);
+    return readICM(&accelReg, BANK_0, true, accelHandler);
 }
 
 ret_code_t getTemp(void) {
     Reg_t tempReg;
     tempReg.reg0 = TEMP_H;
-    readICM(&tempReg, BANK_0, true, tempHandler);
+    return readICM(&tempReg, BANK_0, true, tempHandler);
 }
 
 ret_code_t initIcm20948(void) {
@@ -301,6 +320,7 @@ ret_code_t initIcm20948(void) {
     APP_ERROR_CHECK(initSpi0Master());
     APP_ERROR_CHECK(initDataStore());
     APP_ERROR_CHECK(wakeUpICM());
+    APP_ERROR_CHECK(configICM());
     APP_ERROR_CHECK(readICM(&whoami, BANK_0, false, genericEndReadHandler));
     return NRF_SUCCESS;
 }
