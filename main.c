@@ -74,60 +74,14 @@ NRF_LOG_MODULE_REGISTER();
     __ASM(".global _printf_float");
 #endif
 
-APP_TIMER_DEF(appTimer);
-
-
-static void lfclk_config(void)
-{
-    ret_code_t err_code;
-
-    err_code = nrf_drv_clock_init();
-    APP_ERROR_CHECK(err_code);
-
-    nrf_drv_clock_lfclk_request(NULL);
-}
- 
-// static void testHandler(void * p_context) {
-//     //NRF_LOG_INFO("DATA: %d\n\r", checkData());
-//     getAccelerationX();
-//     getAccelerationY();
-//     getAccelerationZ();
-//     uint16_t myo = readMyoware();
-//     NRF_LOG_INFO("MyoWare: %d\n\r", myo);
-//     return;
-// }
-
-static void initTimer(void) {
-    ret_code_t errCode;
-
-    errCode = app_timer_init();
-    APP_ERROR_CHECK(errCode);
-    
- //   errCode = app_timer_create(&appTimer, 
-//        APP_TIMER_MODE_REPEATED, 
- //       timerHandler);
-    APP_ERROR_CHECK(errCode);
-
-    errCode = app_timer_start(appTimer, APP_TIMER_TICKS(1000), NULL);
-    APP_ERROR_CHECK(errCode);
-
-}
-
-
-
-int main(void)
-{
+int main(void) {
     APP_ERROR_CHECK(NRF_LOG_INIT(NULL));
     NRF_LOG_DEFAULT_BACKENDS_INIT();
-    NRF_LOG_INFO("Start Boot \n\r");
     APP_ERROR_CHECK(nrf_pwr_mgmt_init());
-
-    //lfclk_config();
-    // initTimer();
     initDataChannels();
     APP_ERROR_CHECK(initIcm20948());
     initMyoware();
-    NRF_LOG_INFO("SPI transaction manager example started. \n\r");
+    NRF_LOG_INFO("FANTM Alpha firmware initialized. \n\r");
     while (true)
     {
         nrf_pwr_mgmt_run();

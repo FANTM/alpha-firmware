@@ -18,11 +18,15 @@
 #define NUM_CHANNELS 4
 #define PERIOD_MS    1000
 
+/* Stores functions that are called in the timer loop. Other modules store their data polling callbacks here */
 static void (*dataCallbacks[NUM_CHANNELS])();
-static int activeChannels = 0;
+static int activeChannels = 0;  // How many channels are currently populated by another module
 static const nrf_drv_timer_t harvestTimer = NRF_DRV_TIMER_INSTANCE(0);
-static nrf_ppi_channel_t     channels[NUM_CHANNELS];
+static nrf_ppi_channel_t     channels[NUM_CHANNELS];  // PPI channels, not used for now
 
+/**
+ * Uses the HF timer, called at a loop.
+ */
 static void timerHandler(nrf_timer_event_t event_type, void * p_context)
 {
     int i;
@@ -31,6 +35,9 @@ static void timerHandler(nrf_timer_event_t event_type, void * p_context)
     }
 }
 
+/**
+ * Initialize and kick off the HF timer as well the PPI interface used by other modules. 
+ */
 void initDataChannels() {
     ret_code_t err_code;
 
@@ -52,6 +59,9 @@ void initDataChannels() {
     nrf_drv_timer_enable(&harvestTimer);
 }
 
+/**
+ * API for other modules to add their data polling to the timer loop. 
+ */
 ret_code_t attachDataChannel(uint32_t taskAddr, bool usePPI) {
     if (activeChannels == NUM_CHANNELS) {
         return NRF_ERROR_DATA_SIZE;

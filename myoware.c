@@ -15,23 +15,22 @@
 
 #include "nrf_log.h"
 
+#define SAMPLES_IN_BUFFER 1  // Number of times _sample is called before we generate a "finished" callback
 
-
-
-#define SAMPLES_IN_BUFFER 1
-volatile uint8_t state = 1;
-
+/* Stores the read samples */
 static nrf_saadc_value_t     m_buffer_pool[2][SAMPLES_IN_BUFFER];
-static uint16_t              readData;
 
-
-
-static void initSamplingEvent(void)
-{
+/**
+ * Sends a callback to the data polling loop. In this case that callback just samples
+ * the ADC, which then triggers its own callback when the sample is collected.
+ */
+static void initSamplingEvent(void) {
     attachDataChannel((uint32_t) nrf_drv_saadc_sample, false);
 }
 
-
+/**
+ * Callback from sampling. When we are done sampling the ADC, the data is made available here.
+ */ 
 static void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 {
     if (p_event->type == NRF_DRV_SAADC_EVT_DONE)
@@ -47,12 +46,15 @@ static void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
         {
             accumulator += p_event->data.done.p_buffer[i];
         }
-        readData = accumulator / SAMPLES_IN_BUFFER;
-        NRF_LOG_INFO("READ DATA: %d\n\r", readData);
+        accumulator /= SAMPLES_IN_BUFFER;
+        NRF_LOG_INFO("READ DATA: %d\n\r", accumulator);
     }
 }
 
-
+/**
+ * Initialize the appropriate HAL drivers, and pins for using the ADC
+ * In this case we are using pin A0 -> 2
+ */ 
 static void initSaadc(void)
 {
     ret_code_t err_code;
@@ -72,11 +74,9 @@ static void initSaadc(void)
     APP_ERROR_CHECK(err_code);
 }
 
-
-uint16_t readMyoware(void) {
-    return readData;
-}
-
+/**
+ * Initializes each part of the myoware setup, connecting hardware and handlers.
+ */ 
 ret_code_t initMyoware(void) {
     initSaadc();
     initSamplingEvent();

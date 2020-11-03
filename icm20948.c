@@ -107,8 +107,6 @@ static nrf_spi_mngr_transfer_t readTransfers[] =  {
         NRF_SPI_MNGR_TRANSFER(&(cmdBuff[1]), 1, &(recvBuff[2]), 2)
 };
 
-
-
 static Bank_t activeBank = BANK_0;  // Device boots into bank 0
 
 static ret_code_t initDataStore(void) {
@@ -163,13 +161,10 @@ static void genericEndReadHandler(ret_code_t resultCode, void * userData) {
 }
 
 static void accelHandler(ret_code_t resultCode, void *userData) {
-    //NRF_LOG_INFO("Result: %d", resultCode);
-    //NRF_LOG_INFO("Returned data: %d %d %d %d", recvBuff[0], recvBuff[1], recvBuff[2], recvBuff[3]);
     int16_t raw = (recvBuff[1] << 8) | recvBuff[3];
     //double adjG = ((double) raw) * 0.00059855; //16384;
     //double accel = adjG * 9.80665;
-
-    NRF_LOG_INFO("accel: %d\n\r", raw);
+    NRF_LOG_INFO("raw accel: %d\n\r", raw);
     free(userData);
     return;
 }
@@ -182,22 +177,48 @@ static void tempHandler(ret_code_t resultCode, void *userData) {
     free(userData);
 }
 
+/**
+ * ICM has 4 register banks, along with a 5th for its magnetometer.
+ */ 
 static ret_code_t changeBank(Bank_t currBank, Bank_t newBank) {
-    RegBank0_t reg = BANK0_BANK_SEL;  // Arbitrary RegBank because the register is the same in every bank
+    Reg_t reg;
+    reg.reg0 = BANK0_BANK_SEL;  // Arbitrary RegBank because the register is the same in every bank
     if (currBank == newBank)
         return NRF_SUCCESS;
-    return NRF_SUCCESS;
-    //writeByte()
+
+    uint8_t bitmap[] = {2,2,2,2, 2,2,2,2};
+    switch(newBank) {
+        case BANK_0:
+            bitmap[4] = 0;
+            bitmap[5] = 0; 
+        case BANK_1:
+            bitmap[4] = 1;
+            bitmap[5] = 0; 
+        case BANK_2:
+            bitmap[4] = 0;
+            bitmap[5] = 1; 
+        case BANK_3:
+            bitmap[4] = 1;
+            bitmap[5] = 1; 
+    }
+    ret_code_t errCode = writeICM(&reg, currBank, bitmap);
+    activeBank = newBank;
+    return errCode;
 }
 
+/**
+ * Take the ICM out of sleep mode, enabling reading outputs
+ */
 static ret_code_t wakeUpICM(void) {
     Reg_t pwrMgmt;
     pwrMgmt.reg0 = PWR_MGMT_1;
     uint8_t bitmask[] = {2,2,2,2,2,2,0,2};
     return writeICM(&pwrMgmt, BANK_0, bitmask);
-    //return readICM(&pwrMgmt, BANK_0, , genericEndReadHandler);
 }
 
+/**
+ * Put the ICM into low power sleep mode, all outputs beside WHOAMI will be 0
+ */ 
 static ret_code_t sleepICM(void) {
     Reg_t pwrMgmt;
     pwrMgmt.reg0 = PWR_MGMT_1;
@@ -205,20 +226,37 @@ static ret_code_t sleepICM(void) {
     return writeICM(&pwrMgmt, BANK_0, bitmask);
 }
 
+/**
+ * Setup the USER_CTRL register
+ * USER_CTRL - ADDR: 0x03 - BANK: 0x00
+ * BIT | NAME       | FUNCTION (if 1 is written)
+ * 7   | DMP_EN     | Enable digital motion processing features
+ * 6   | FIFO_EN    | Enable writing data into the FIFO
+ * 5   | I2C_MST_EN | Enable I2C master mode
+ * 4   | I2C_IF_DIS | Reset I2C slave module
+ * 3   | DMP_RST    | Reset DMP module
+ * 2   | SRAM_RST   | Reset SRAM module
+ * 1   | I2C_MST_RST| Reset I2C master mode
+ * 0   | ---------- | Reserved
+ */ 
 static ret_code_t configUserCtrl(void) {
     Reg_t config;
     config.reg0 = USER_CTRL;
-    uint8_t bitmask[] = {2, 2, 2, 2, 1, 2, 1, 1};
+    uint8_t bitmask[] = {2, 2, 2, 2, 1, 0, 1, 1};
     return writeICM(&config, BANK_0, bitmask);
 }
 
-static ret_code_t configFifo(void) {
-    Reg_t config;
-    config.reg0 = USER_CTRL;
-    uint8_t bitmask[] = {2, 2, 2, 2, 1, 2, 1, 1};
-    return writeICM(&config, BANK_0, bitmask);
-}
+// TODO Configure FIFO
+// static ret_code_t configFifo(void) {
+//     Reg_t config;
+//     config.reg0 = USER_CTRL;
+//     uint8_t bitmask[] = {2, 2, 2, 2, 1, 2, 1, 1};
+//     return writeICM(&config, BANK_0, bitmask);
+// }
 
+/** 
+ * Call all of the needed configuration register writes.
+ */
 static ret_code_t configICM(void) {
     ret_code_t errCode;
 
@@ -228,6 +266,11 @@ static ret_code_t configICM(void) {
     return errCode;
 }
 
+/**
+ * Read a register over SPI on the ICM. 
+ * Takes in a reg Union, and the bank to do the bank management for the user,
+ * as well as a transaction 
+ */
 static ret_code_t readICM(Reg_t *reg, Bank_t bank,  
                             nrf_spi_mngr_transaction_t *transaction) {
     if (bank != activeBank) {
@@ -251,7 +294,6 @@ static ret_code_t writeICM(Reg_t *reg, Bank_t bank, uint8_t *data) {
         changeBank(activeBank, bank);
     }
 
-   
     static uint8_t readData[2];
     static uint8_t readReg[1]; 
     readReg[0] = (uint8_t)(0x80 | *((uint8_t *)reg));
@@ -355,6 +397,9 @@ ret_code_t getTemp(void) {
     return readICM(&tempReg, BANK_0, &transaction);
 }
 
+/**
+ * Pulls in the most recent Acc/Gyro/Mag/Temp readings
+ */ 
 ret_code_t getAGMT(void) {
     getAccelerationX();
     getAccelerationY();
