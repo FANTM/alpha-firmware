@@ -62,6 +62,7 @@ SRC_FILES += \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/icm20948.c \
   $(PROJ_DIR)/myoware.c \
+  $(PROJ_DIR)/data.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
 
 #$(SDK_ROOT)/components/libraries/mem_manager/mem_manager.c \

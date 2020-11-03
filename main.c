@@ -54,7 +54,7 @@
 #include "nrf_spi_mngr.h"
 #include "bsp.h"
 #include "nrf_delay.h"
-
+#include "data.h"
 #include "nrf_log_default_backends.h"
 
 #include "icm20948.h"
@@ -87,15 +87,15 @@ static void lfclk_config(void)
     nrf_drv_clock_lfclk_request(NULL);
 }
  
-static void timerHandler(void * p_context) {
-    //NRF_LOG_INFO("DATA: %d\n\r", checkData());
-    getAccelerationX();
-    getAccelerationY();
-    getAccelerationZ();
-    uint16_t myo = readMyoware();
-    NRF_LOG_INFO("MyoWare: %d\n\r", myo);
-    return;
-}
+// static void testHandler(void * p_context) {
+//     //NRF_LOG_INFO("DATA: %d\n\r", checkData());
+//     getAccelerationX();
+//     getAccelerationY();
+//     getAccelerationZ();
+//     uint16_t myo = readMyoware();
+//     NRF_LOG_INFO("MyoWare: %d\n\r", myo);
+//     return;
+// }
 
 static void initTimer(void) {
     ret_code_t errCode;
@@ -103,9 +103,9 @@ static void initTimer(void) {
     errCode = app_timer_init();
     APP_ERROR_CHECK(errCode);
     
-    errCode = app_timer_create(&appTimer, 
-        APP_TIMER_MODE_REPEATED, 
-        timerHandler);
+ //   errCode = app_timer_create(&appTimer, 
+//        APP_TIMER_MODE_REPEATED, 
+ //       timerHandler);
     APP_ERROR_CHECK(errCode);
 
     errCode = app_timer_start(appTimer, APP_TIMER_TICKS(1000), NULL);
@@ -113,14 +113,18 @@ static void initTimer(void) {
 
 }
 
+
+
 int main(void)
 {
     APP_ERROR_CHECK(NRF_LOG_INIT(NULL));
     NRF_LOG_DEFAULT_BACKENDS_INIT();
     NRF_LOG_INFO("Start Boot \n\r");
-    lfclk_config();
-    initTimer();
     APP_ERROR_CHECK(nrf_pwr_mgmt_init());
+
+    //lfclk_config();
+    // initTimer();
+    initDataChannels();
     APP_ERROR_CHECK(initIcm20948());
     initMyoware();
     NRF_LOG_INFO("SPI transaction manager example started. \n\r");

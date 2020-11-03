@@ -255,7 +255,7 @@
 // <7=> 7 
 
 #ifndef NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY
-#define NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY 7
+#define NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY 6
 #endif
 
 // <e> NRFX_TIMER_CONFIG_LOG_ENABLED - Enables logging in the module.
@@ -1865,7 +1865,7 @@
 // <i> Log data is buffered and can be processed in idle.
 
 #ifndef NRF_LOG_DEFERRED
-#define NRF_LOG_DEFERRED 0
+#define NRF_LOG_DEFERRED 1
 #endif
 
 // <q> NRF_LOG_FILTERS_ENABLED  - Enable dynamic filtering of logs.

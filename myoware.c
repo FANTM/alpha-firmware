@@ -10,7 +10,7 @@
 #include "app_util_platform.h"
 #include "nrf_pwr_mgmt.h"
 #include "myoware.h"
-
+#include "data.h"
 #define NRF_LOG_MODULE_NAME fantm
 
 #include "nrf_log.h"
@@ -18,62 +18,17 @@
 
 
 
-#define SAMPLES_IN_BUFFER 5
+#define SAMPLES_IN_BUFFER 1
 volatile uint8_t state = 1;
 
-static const nrf_drv_timer_t m_timer = NRF_DRV_TIMER_INSTANCE(0);
 static nrf_saadc_value_t     m_buffer_pool[2][SAMPLES_IN_BUFFER];
-static nrf_ppi_channel_t     m_ppi_channel;
-static uint32_t              m_adc_evt_counter;
 static uint16_t              readData;
 
-static void timer_handler(nrf_timer_event_t event_type, void * p_context)
-{
-
-}
 
 
 static void initSamplingEvent(void)
 {
-    ret_code_t err_code;
-
-    err_code = nrf_drv_ppi_init();
-    APP_ERROR_CHECK(err_code);
-
-    nrf_drv_timer_config_t timer_cfg = NRF_DRV_TIMER_DEFAULT_CONFIG;
-    timer_cfg.bit_width = NRF_TIMER_BIT_WIDTH_32;
-    err_code = nrf_drv_timer_init(&m_timer, &timer_cfg, timer_handler);
-    APP_ERROR_CHECK(err_code);
-
-    /* setup m_timer for compare event every 100ms */
-    uint32_t ticks = nrf_drv_timer_ms_to_ticks(&m_timer, 1);
-    nrf_drv_timer_extended_compare(&m_timer,
-                                   NRF_TIMER_CC_CHANNEL0,
-                                   ticks,
-                                   NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK,
-                                   false);
-    nrf_drv_timer_enable(&m_timer);
-
-    uint32_t timer_compare_event_addr = nrf_drv_timer_compare_event_address_get(&m_timer,
-                                                                                NRF_TIMER_CC_CHANNEL0);
-    uint32_t saadc_sample_task_addr   = nrf_drv_saadc_sample_task_get();
-
-    /* setup ppi channel so that timer compare event is triggering sample task in SAADC */
-    err_code = nrf_drv_ppi_channel_alloc(&m_ppi_channel);
-    APP_ERROR_CHECK(err_code);
-
-    err_code = nrf_drv_ppi_channel_assign(m_ppi_channel,
-                                          timer_compare_event_addr,
-                                          saadc_sample_task_addr);
-    APP_ERROR_CHECK(err_code);
-}
-
-
-static void enableSamplingEvent(void)
-{
-    ret_code_t err_code = nrf_drv_ppi_channel_enable(m_ppi_channel);
-
-    APP_ERROR_CHECK(err_code);
+    attachDataChannel((uint32_t) nrf_drv_saadc_sample, false);
 }
 
 
@@ -93,6 +48,7 @@ static void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
             accumulator += p_event->data.done.p_buffer[i];
         }
         readData = accumulator / SAMPLES_IN_BUFFER;
+        NRF_LOG_INFO("READ DATA: %d\n\r", readData);
     }
 }
 
@@ -124,5 +80,5 @@ uint16_t readMyoware(void) {
 ret_code_t initMyoware(void) {
     initSaadc();
     initSamplingEvent();
-    enableSamplingEvent();
+    return NRF_SUCCESS;
 }

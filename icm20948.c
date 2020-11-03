@@ -11,6 +11,7 @@
 #include "nrf_log.h"
 
 #include "icm20948.h"
+#include "data.h"
 
 #define ICM20948_QUEUE_LENGTH     15  // FIXME Need to replace these two values
 #define ICM20948_SPI_INSTANCE_ID  0
@@ -162,13 +163,13 @@ static void genericEndReadHandler(ret_code_t resultCode, void * userData) {
 }
 
 static void accelHandler(ret_code_t resultCode, void *userData) {
-    NRF_LOG_INFO("Result: %d", resultCode);
-    NRF_LOG_INFO("Returned data: %d %d %d %d", recvBuff[0], recvBuff[1], recvBuff[2], recvBuff[3]);
+    //NRF_LOG_INFO("Result: %d", resultCode);
+    //NRF_LOG_INFO("Returned data: %d %d %d %d", recvBuff[0], recvBuff[1], recvBuff[2], recvBuff[3]);
     int16_t raw = (recvBuff[1] << 8) | recvBuff[3];
     //double adjG = ((double) raw) * 0.00059855; //16384;
     //double accel = adjG * 9.80665;
 
-    NRF_LOG_INFO("Combined value: %d\n\r", raw);
+    NRF_LOG_INFO("accel: %d\n\r", raw);
     free(userData);
     return;
 }
@@ -354,6 +355,13 @@ ret_code_t getTemp(void) {
     return readICM(&tempReg, BANK_0, &transaction);
 }
 
+ret_code_t getAGMT(void) {
+    getAccelerationX();
+    getAccelerationY();
+    getAccelerationZ();
+    return NRF_SUCCESS;
+}
+
 ret_code_t initIcm20948(void) {
     Reg_t whoami;
     whoami.reg0 = WHO_AM_I;
@@ -370,5 +378,6 @@ ret_code_t initIcm20948(void) {
         .p_required_spi_cfg  = NULL
     };
     APP_ERROR_CHECK(readICM(&whoami, BANK_0, &transaction));
+    attachDataChannel((uint32_t) getAGMT, false);
     return NRF_SUCCESS;
 }
