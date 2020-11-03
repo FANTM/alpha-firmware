@@ -55,10 +55,10 @@
 #include "bsp.h"
 #include "nrf_delay.h"
 
-
 #include "nrf_log_default_backends.h"
 
 #include "icm20948.h"
+#include "myoware.h"
 
 #define NRF_LOG_MODULE_NAME fantm
 #define NRF_LOG_LEVEL       6
@@ -92,6 +92,8 @@ static void timerHandler(void * p_context) {
     getAccelerationX();
     getAccelerationY();
     getAccelerationZ();
+    uint16_t myo = readMyoware();
+    NRF_LOG_INFO("MyoWare: %d\n\r", myo);
     return;
 }
 
@@ -120,6 +122,7 @@ int main(void)
     initTimer();
     APP_ERROR_CHECK(nrf_pwr_mgmt_init());
     APP_ERROR_CHECK(initIcm20948());
+    initMyoware();
     NRF_LOG_INFO("SPI transaction manager example started. \n\r");
     while (true)
     {

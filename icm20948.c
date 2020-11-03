@@ -1,7 +1,6 @@
 
 #include "app_util_platform.h"
 #include "nrf_delay.h"
-#include "nrf_gpio.h"
 #include "nrf_spi_mngr.h"
 #include "boards.h"
 #include "nordic_common.h"
