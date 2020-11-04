@@ -6,10 +6,6 @@
  */
 ret_code_t initIcm20948(void);
 
-ret_code_t getAccelerationX(void);
-
-ret_code_t getAccelerationY(void);
-
-ret_code_t getAccelerationZ(void);
+void printAGMT(void);
 
 #endif

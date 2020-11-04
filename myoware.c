@@ -47,7 +47,6 @@ static void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
             accumulator += p_event->data.done.p_buffer[i];
         }
         accumulator /= SAMPLES_IN_BUFFER;
-        NRF_LOG_INFO("READ DATA: %d\n\r", accumulator);
     }
 }
 

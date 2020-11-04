@@ -10,29 +10,37 @@
 #include "nrf_pwr_mgmt.h"
 #include "myoware.h"
 #include "data.h"
+#include "icm20948.h"
 
 #define NRF_LOG_MODULE_NAME fantm
 
 #include "nrf_log.h"
 
 #define NUM_CHANNELS 4
-#define PERIOD_MS    1000
+#define PERIOD_MS    100
 
 /* Stores functions that are called in the timer loop. Other modules store their data polling callbacks here */
 static void (*dataCallbacks[NUM_CHANNELS])();
 static int activeChannels = 0;  // How many channels are currently populated by another module
 static const nrf_drv_timer_t harvestTimer = NRF_DRV_TIMER_INSTANCE(0);
 static nrf_ppi_channel_t     channels[NUM_CHANNELS];  // PPI channels, not used for now
-
+static int ticks = 0;
 /**
  * Uses the HF timer, called at a loop.
  */
 static void timerHandler(nrf_timer_event_t event_type, void * p_context)
 {
-    int i;
-    for (i = 0; i < activeChannels; i++) {
-        dataCallbacks[i]();
+    if (ticks == 10) {
+        printAGMT();
+        ticks = 0;
+    } else {
+        int i;
+        for (i = 0; i < activeChannels; i++) {
+            dataCallbacks[i]();
+        }
+        ticks++;
     }
+    
 }
 
 /**
