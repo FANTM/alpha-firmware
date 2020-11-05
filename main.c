@@ -84,6 +84,14 @@ int main(void) {
     NRF_LOG_INFO("FANTM Alpha firmware initialized. \n\r");
     while (true)
     {
+        if (printFlag) {
+            printAGMT();
+            printFlag = false;
+        }
+        if (readFlag) {
+            updateAGMT();
+            readFlag = false;
+        }
         nrf_pwr_mgmt_run();
         NRF_LOG_FLUSH();
     }

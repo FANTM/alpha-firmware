@@ -8,4 +8,6 @@ ret_code_t initIcm20948(void);
 
 void printAGMT(void);
 
+ret_code_t updateAGMT(void);
+
 #endif

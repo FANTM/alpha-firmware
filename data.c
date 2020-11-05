@@ -25,22 +25,29 @@ static int activeChannels = 0;  // How many channels are currently populated by 
 static const nrf_drv_timer_t harvestTimer = NRF_DRV_TIMER_INSTANCE(0);
 static nrf_ppi_channel_t     channels[NUM_CHANNELS];  // PPI channels, not used for now
 static int ticks = 0;
+
+
+
 /**
  * Uses the HF timer, called at a loop.
  */
 static void timerHandler(nrf_timer_event_t event_type, void * p_context)
 {
     if (ticks == 10) {
-        printAGMT();
+        printFlag = true;
         ticks = 0;
     } else {
-        int i;
-        for (i = 0; i < activeChannels; i++) {
-            dataCallbacks[i]();
-        }
+        readFlag = true;
         ticks++;
     }
     
+}
+
+void harvestData(void) {
+    int i;
+    for (i = 0; i < activeChannels; i++) {
+        dataCallbacks[i]();
+    }
 }
 
 /**
@@ -48,7 +55,8 @@ static void timerHandler(nrf_timer_event_t event_type, void * p_context)
  */
 void initDataChannels() {
     ret_code_t err_code;
-
+    readFlag = false;
+    printFlag = false;
     err_code = nrf_drv_ppi_init();
     APP_ERROR_CHECK(err_code);
 
