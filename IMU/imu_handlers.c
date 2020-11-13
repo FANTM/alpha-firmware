@@ -22,7 +22,7 @@ void startWriteHandler(void *userData) {
     HandlerParameters_t *params = (HandlerParameters_t *) userData;
     params->cmdBuff[0] = params->reg1;
     params->cmdBuff[1] = params->reg2;
-    free(userData);
+    free(userData);  // Dont get any data returned on a write, so we free these right away
 }
 
 void genericEndReadHandler(ret_code_t resultCode, void * userData) {
@@ -33,6 +33,7 @@ void genericEndReadHandler(ret_code_t resultCode, void * userData) {
     return;
 }
 
+// Helper for adding new data to the fifo, since it requires a lot of checks
 static ret_code_t safeAppFifoPut(app_fifo_t *fifo, uint8_t data) {
     ret_code_t errCode = app_fifo_put(fifo, data);
     uint8_t poppedData;
@@ -52,7 +53,7 @@ void allDataHandler(ret_code_t resultCode, void *userData) {
     Data_t *dataStore = params->out;
     ret_code_t errCode;
     errCode = safeAppFifoPut(&dataStore->accelX, params->recvBuff[1]);  // ACCELX_H
-    if (errCode != NRF_SUCCESS) {
+    if (errCode != NRF_SUCCESS) {  // Lazy testing, if we just test a couple we will likely catch some kind of system error
         NRF_LOG_INFO("ERROR!");
     }
     safeAppFifoPut(&dataStore->accelX, params->recvBuff[2]);  // ACCELX_L
@@ -60,7 +61,7 @@ void allDataHandler(ret_code_t resultCode, void *userData) {
     safeAppFifoPut(&dataStore->accelY, params->recvBuff[4]);  // ACCELY_L
     safeAppFifoPut(&dataStore->accelZ, params->recvBuff[5]);  // ACCELZ_H
     errCode = safeAppFifoPut(&dataStore->accelZ, params->recvBuff[6]);  // ACCELZ_L
-    if (errCode != NRF_SUCCESS) {
+    if (errCode != NRF_SUCCESS) {  
         NRF_LOG_INFO("ERROR!");
     }
     safeAppFifoPut(&dataStore->gyroX, params->recvBuff[7]);   // GYROX_H
@@ -83,40 +84,3 @@ void allDataHandler(ret_code_t resultCode, void *userData) {
 
     free(userData);
 }
-
-
-// Deprecated
-// void dataHandler(ret_code_t resultCode, void *userData) {
-//     if (resultCode != NRF_SUCCESS) { 
-//         NRF_LOG_INFO("FAILED!\n");
-//         if(userData != NULL) free(userData);
-//         return;
-//     }
-    
-//     HandlerParameters_t *params = (HandlerParameters_t *) userData;
-//     app_fifo_t *outputFIFO = params->out;
-//     if (outputFIFO == NULL) {
-//         if (userData != NULL) {
-//             free(userData);
-//         }
-//         return;
-//     }
-    
-//     ret_code_t errCode = app_fifo_put(outputFIFO, params->recvBuff[1]);
-//     uint8_t poppedData;
-//     if (errCode == NRF_ERROR_NO_MEM) {
-//         app_fifo_get(outputFIFO, &poppedData);
-//         errCode = app_fifo_put(outputFIFO, params->recvBuff[1]);
-//     }
-
-//     errCode = app_fifo_put(outputFIFO, params->recvBuff[3]);
-//     if (errCode == NRF_ERROR_NO_MEM) {
-//         app_fifo_get(outputFIFO, &poppedData);
-//         errCode = app_fifo_put(outputFIFO, params->recvBuff[3]);
-//     }
-//     //double adjG = ((double) raw) * 0.00059855; //16384;
-//     //double accel = adjG * 9.80665;
-//     //NRF_LOG_INFO("raw accel: %d\n\r", raw);
-//     free(userData);
-//     return;
-// }

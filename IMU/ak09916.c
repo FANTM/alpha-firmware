@@ -41,10 +41,9 @@ typedef enum {
 
 static const uint8_t AK09916_ADDR = 0x0C;
 
-static ret_code_t readAK0(AKReg_t reg, app_fifo_t *outBuffer);
 static ret_code_t writeAK0(AKReg_t reg, uint8_t data);
 
-ret_code_t setAK0DataRate(AK09916_Data_Rate_t dataRate) {
+static ret_code_t setAK0DataRate(AK09916_Data_Rate_t dataRate) {
     /* Taken from Adafruit repo: https://github.com/adafruit/Adafruit_ICM20X/blob/master/Adafruit_ICM20948.cpp
    *
    * Following the datasheet, the sensor will be set to
@@ -54,33 +53,27 @@ ret_code_t setAK0DataRate(AK09916_Data_Rate_t dataRate) {
    * See page 9 of https://www.y-ic.es/datasheet/78/SMDSW.020-2OZ.pdf
    */
 
-  // don't need to read/mask because there's nothing else in the register and
-  // it's right justified
+    ret_code_t errCode;
+    if ((errCode = writeAK0(CNTL_2, AK09916_MAG_DATARATE_SHUTDOWN)) != NRF_SUCCESS) 
+        return errCode;
 
-    // ret_code_t errCode;
-    // if ((errCode = writeAK0(CNTL_2, AK09916_MAG_DATARATE_SHUTDOWN)) != NRF_SUCCESS) 
-    //     return errCode;
-
-    // nrf_delay_ms(100);
+    nrf_delay_ms(100);
 
     return writeAK0(CNTL_2, dataRate);
 }
 
 static ret_code_t setAK0Reg(AKReg_t reg) {
+    changeBank(BANK_3);
     ICMReg_t slvReg = {.reg3 = I2C_SLV4_REG};
- //   uint8_t currReg = synchReadICM(&slvReg);
     uint8_t bitmask[] = {
         BIT_MASK(reg, 0), BIT_MASK(reg, 1), BIT_MASK(reg, 2), BIT_MASK(reg, 3), 
         BIT_MASK(reg, 4), BIT_MASK(reg, 5), BIT_MASK(reg, 6), BIT_MASK(reg, 7)
     };
-    // if (currReg != reg) {
-    //     return writeICM(&slvReg, bitmask);
-    // }
     return writeICM(&slvReg, bitmask);
-   // return NRF_SUCCESS;
 }
 
 static ret_code_t setAK0RW(bool read) {
+    changeBank(BANK_3);
     uint8_t bitmask[] = {
         BIT_MASK(AK09916_ADDR, 0),
         BIT_MASK(AK09916_ADDR, 1),
@@ -91,16 +84,19 @@ static ret_code_t setAK0RW(bool read) {
         BIT_MASK(AK09916_ADDR, 6),
         2
     };
+
     if (read) {
         bitmask[7] = 1;
     } else {
         bitmask[7] = 0;
     }
+
     ICMReg_t reg = {.reg3 = I2C_SLV4_ADDR};
     return writeICM(&reg, bitmask);
 }
 
 static ret_code_t setAK0DataOut(uint8_t data) {
+    changeBank(BANK_3);
     ICMReg_t reg = {.reg3 = I2C_SLV4_DO};
     uint8_t bitmask[] = {
         BIT_MASK(data, 0),
@@ -115,49 +111,45 @@ static ret_code_t setAK0DataOut(uint8_t data) {
     return writeICM(&reg, bitmask);
 }
 
-// static ret_code_t readAK0(AKReg_t reg, app_fifo_t *outBuffer) {
-//     ICMReg_t internalReg;
-//     internalReg.reg0 = EXT_SLV_SENS_DATA_00;
-//     static nrf_spi_mngr_transaction_t transaction;
-//     transaction.number_of_transfers = 1;
-
-//     void (*handler)(ret_code_t, void *) = outBuffer == NULL ? genericEndReadHandler : dataHandler;
-
-//     APP_ERROR_CHECK(setAK0RW(true));
-//     APP_ERROR_CHECK(setAK0Reg(reg));
-
-//     readICM(&internalReg, &transaction, outBuffer, handler);
-//     return NRF_SUCCESS;
-// }
-// Kind of weird but you write the internal reg via 
+// Kind of weird but you write the internal reg via SLV4
 static ret_code_t writeAK0(AKReg_t reg, uint8_t data) {
-    //changeBank(BANK_3);
     setAK0DataOut(data);
     setAK0Reg(reg);
     setAK0RW(false);  // Write mode
+    changeBank(BANK_3);
     uint8_t ctrlBitmask[] = { 
         0, 0, 0, 0, 0, 0, 0, 1  // 0x80
     };
     ICMReg_t wrreg = {.reg3 = I2C_SLV4_CTRL};
-    writeICM(&wrreg, ctrlBitmask);
-    nrf_delay_ms(100);
-    return NRF_SUCCESS;
+    return writeICM(&wrreg, ctrlBitmask);
 }
 
 static ret_code_t configI2CMaster(void) {
+    changeBank(BANK_3);
+    ret_code_t errCode;
     ICMReg_t reg = {.reg3 = I2C_MST_CTRL};
     uint8_t bitmask[] = { // 0x17
         1, 1, 1, 0, //0x07
         1, 0, 0, 0  //0x10
     };
-
-    return writeICM(&reg, bitmask);
+    if ((errCode = writeICM(&reg, bitmask)) != NRF_SUCCESS)
+        return errCode;
+    
+    changeBank(BANK_0);
+    uint8_t ctrlBitmask[] = {2, 2, 2, 2, 2, 1, 2, 2};
+    ICMReg_t config = {.reg0 = USER_CTRL};
+    
+    return writeICM(&config, ctrlBitmask);
 }
 
+/* Not only initializes the sensor, but also kicks off continuous readings */
 ret_code_t initAK09916() {
-    changeBank(BANK_3);
+    ret_code_t errCode = NRF_SUCCESS;
+
     APP_ERROR_CHECK(configI2CMaster());
-    setAK0DataRate(AK09916_MAG_DATARATE_100_HZ);
+    changeBank(BANK_3);
+    if ((errCode = setAK0DataRate(AK09916_MAG_DATARATE_100_HZ)) != NRF_SUCCESS)
+        return errCode;
 
     ICMReg_t reg = {.reg3 = I2C_SLV0_ADDR};
     uint8_t addrBitmask[] = {
@@ -170,7 +162,8 @@ ret_code_t initAK09916() {
         BIT_MASK(AK09916_ADDR, 6),
         1  // First we want to read
     };
-    writeICM(&reg, addrBitmask);
+    if ((errCode = writeICM(&reg, addrBitmask)) != NRF_SUCCESS)
+        return errCode;
 
     reg.reg3 = I2C_SLV0_REG;
     uint8_t regBitmask[] = {
@@ -183,13 +176,12 @@ ret_code_t initAK09916() {
         BIT_MASK(STATUS_1, 6),
         BIT_MASK(STATUS_1, 7),
     };
-    writeICM(&reg, regBitmask);
+    if ((errCode = writeICM(&reg, regBitmask)) != NRF_SUCCESS)
+        return errCode;
 
     reg.reg3 = I2C_SLV0_CTRL;
     uint8_t ctrlBitmask[] = { 
-        1, 1, 1, 1, 0, 0, 0, 1  // 0x89 <- enable + read 9 bytes at a time
+        1, 0, 0, 1, 0, 0, 0, 1  // 0x89 <- enable + read 9 bytes at a time
     };
-    writeICM(&reg, ctrlBitmask);
-    return NRF_SUCCESS;
+    return writeICM(&reg, ctrlBitmask);
 }
-

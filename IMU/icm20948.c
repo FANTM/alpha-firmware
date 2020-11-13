@@ -81,9 +81,7 @@ ret_code_t changeBank(ICMBank_t bank) {
             break;
     }
 
-    ret_code_t errCode = writeICM(&reg, bitmap);
-    //while(!nrf_spi_mngr_is_idle(&spiManager));  // Spin until all transactions are complete, we want to make sure the bank is switched.
-    return errCode;
+    return writeICM(&reg, bitmap);
 }
 
 /**
@@ -92,17 +90,14 @@ ret_code_t changeBank(ICMBank_t bank) {
 ret_code_t wakeUpICM(void) {
     ICMReg_t pwrMgmt = {.reg0 = PWR_MGMT_1};
     uint8_t bitmask[] = {2,2,2,2,2,2,0,2};
-    ret_code_t errCode;
-    errCode = writeICM(&pwrMgmt, bitmask);
-    return errCode;
+    return writeICM(&pwrMgmt, bitmask);
 }
 
 /**
- * Take the ICM out of sleep mode, enabling reading outputs
+ * Software reset, not used currently
  */
 ret_code_t resetICM(void) {
-    ICMReg_t pwrMgmt;
-    pwrMgmt.reg0 = PWR_MGMT_1;
+    ICMReg_t pwrMgmt = {.reg0 = PWR_MGMT_1};
     uint8_t bitmask[] = {1,2,2,2,2,2,2,2};
     ret_code_t errCode;
     errCode = writeICM(&pwrMgmt, bitmask);
@@ -120,8 +115,7 @@ ret_code_t resetICM(void) {
  * Put the ICM into low power sleep mode, all outputs beside WHOAMI will be 0
  */ 
 ret_code_t sleepICM(void) {
-    ICMReg_t pwrMgmt;
-    pwrMgmt.reg0 = PWR_MGMT_1;
+    ICMReg_t pwrMgmt = {.reg0 = PWR_MGMT_1};
     uint8_t bitmask[] = {2,2,2,2,2,2,1,2};
     return writeICM(&pwrMgmt, bitmask);
 }
@@ -139,20 +133,12 @@ ret_code_t sleepICM(void) {
  * 1   | I2C_MST_RST| Reset I2C master mode
  * 0   | ---------- | Reserved
  */ 
-ret_code_t configUserCtrl(void) {
+static ret_code_t configUserCtrl(void) {
     ICMReg_t config;
     config.reg0 = USER_CTRL;
-    uint8_t bitmask[] = {2, 0, 0, 1, 1, 1, 0, 0};
+    uint8_t bitmask[] = {2, 0, 0, 1, 1, 0, 0, 0};
     return writeICM(&config, bitmask);
 }
-
-// TODO Configure FIFO
-// static ret_code_t configFifo(void) {
-//     Reg_t config;
-//     config.reg0 = USER_CTRL;
-//     uint8_t bitmask[] = {2, 2, 2, 2, 1, 2, 1, 1};
-//     return writeICM(&config, BANK_0, bitmask);
-// }
 
 /** 
  * Call all of the needed configuration register writes.
@@ -167,9 +153,8 @@ ret_code_t configICM(void) {
 }
 
 /**
- * Read a register over SPI on the ICM. 
- * Takes in a reg Union, and the bank to do the bank management for the user,
- * as well as a transaction 
+ * Read a register over SPI on the ICM. Specifically schedules the transaction for as soon as the manager is free,
+ * and then it puts the data in a common buffer which is parsed by the end handler
  */
 ret_code_t readICM(ICMReg_t *reg, nrf_spi_mngr_transaction_t *transaction, Data_t *outBuffer, void (*endHandler)(ret_code_t, void *)) {
 
@@ -189,6 +174,9 @@ ret_code_t readICM(ICMReg_t *reg, nrf_spi_mngr_transaction_t *transaction, Data_
     return nrf_spi_mngr_schedule(&spiManager, transaction);
 }
 
+/**
+ *  For those who like instant gratification ;)
+ */
 uint8_t synchReadICM(ICMReg_t *reg) {
 
     static uint8_t readData[] = {0xff, 0xff};
@@ -267,7 +255,7 @@ ret_code_t initIcm20948(void) {
     ICMReg_t whoami = {.reg0 = WHO_AM_I};
     APP_ERROR_CHECK(initSpi0Master());
     APP_ERROR_CHECK(changeBank(BANK_0));
-    //APP_ERROR_CHECK(resetICM());
+    //APP_ERROR_CHECK(resetICM()); Dont need to reset, but can re-enable for testing
     APP_ERROR_CHECK(wakeUpICM());
     APP_ERROR_CHECK(configICM());
     NRF_LOG_INFO("==WHOAMI: %d==", synchReadICM(&whoami));

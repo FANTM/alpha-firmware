@@ -17,8 +17,6 @@
 
 #define WINDOW_SIZE 16
 
-
-
 static uint8_t accelXBuff[WINDOW_SIZE];
 static uint8_t accelYBuff[WINDOW_SIZE];
 static uint8_t accelZBuff[WINDOW_SIZE];
@@ -120,7 +118,7 @@ static ret_code_t initDataStore(void) {
     return NRF_SUCCESS;
 }
 
-ret_code_t readData(void) {
+static ret_code_t readData(void) {
     ICMReg_t reg = {.reg0 = ACCEL_X_H};
     static nrf_spi_mngr_transaction_t transaction;
     return readICM(&reg, &transaction, &dataStore, allDataHandler);
@@ -132,25 +130,11 @@ ret_code_t getPwrMgmt(void) {
     return readICM(&pwrMgmt, &transaction, NULL, genericEndReadHandler);
 }
 
-static int watcher = 1;
 /**
  * Pulls in the most recent Acc/Gyro/Mag/Temp readings
  */ 
 ret_code_t updateAGMT(void) {
-    // if (watcher == 0) {     // Addresses Ezra's weird bug. Basically resets the device.
-    //     wakeUpICM();
-    //     configICM();
-    //     nrf_delay_us(200);
-    // }
-    //wakeUpICM();
-    readData();
-    return NRF_SUCCESS;
-}
-
-uint8_t readBank(void) {
-    ICMReg_t reg = {.reg0 = BANK0_BANK_SEL};
-    //static nrf_spi_mngr_transaction_t transaction = {.number_of_transfers = 1};
-    return synchReadICM(&reg);
+    return readData();
 }
 
 void printAGMT(void) {
@@ -166,8 +150,6 @@ void printAGMT(void) {
     magX = reduceFIFO(&(dataStore.magX));
     magY = reduceFIFO(&(dataStore.magY));
     magZ = reduceFIFO(&(dataStore.magZ));
-    // NRF_LOG_INFO("BANK(%d)", readBank());
-    // watcher = accelX + accelY + accelZ + gyroX + gyroY + gyroZ;  // Checks if we've crashed
     NRF_LOG_INFO("===========DATA===========");
     NRF_LOG_INFO("ACCEL(X: %d, Y: %d, Z: %d)", accelX, accelY, accelZ);
     NRF_LOG_INFO("GYRO(X: %d, Y: %d, Z: %d)",  gyroX, gyroY, gyroZ);
@@ -179,8 +161,7 @@ ret_code_t initIMU() {
     APP_ERROR_CHECK(initDataStore());
     APP_ERROR_CHECK(initIcm20948());
     APP_ERROR_CHECK(initAK09916());
-    changeBank(BANK_0);
-
+    changeBank(BANK_0);  // After configuration we don't have much reason to leave BANK_0
     attachDataChannel((uint32_t) updateAGMT, false);
     return NRF_SUCCESS;
 }

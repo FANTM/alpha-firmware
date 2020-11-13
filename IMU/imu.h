@@ -3,13 +3,16 @@
 
 #include "app_fifo.h"
 
+/**
+ * This file is the API for the entire IMU folder, the rest should stay internal! 
+ */
+
 ret_code_t initIMU();
 
 void printAGMT(void);
 
 ret_code_t updateAGMT(void);
 
-/* Struct is deliberately organized to mirror the actual registers! */
 typedef struct Data_t {
     app_fifo_t accelX;
     app_fifo_t accelY;
