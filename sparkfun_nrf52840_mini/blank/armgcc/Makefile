@@ -60,7 +60,10 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
   $(PROJ_DIR)/main.c \
-  $(PROJ_DIR)/icm20948.c \
+  $(PROJ_DIR)/IMU/ak09916.c \
+  $(PROJ_DIR)/IMU/icm20948.c \
+  $(PROJ_DIR)/IMU/imu.c \
+  $(PROJ_DIR)/IMU/imu_handlers.c \
   $(PROJ_DIR)/myoware.c \
   $(PROJ_DIR)/data.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
@@ -105,6 +108,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/modules/nrfx/drivers/include \
   $(SDK_ROOT)/external/fprintf \
   $(SDK_ROOT)/components/libraries/log/src \
+  $(PROJ_DIR)/IMU \
 
 # Libraries common to all targets
 LIB_FILES += \
