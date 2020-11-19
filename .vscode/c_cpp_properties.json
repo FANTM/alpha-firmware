@@ -35,6 +35,8 @@
                 "${nrfSDK}/integration/nrfx/legacy",
                 "${nrfSDK}/components/libraries/delay",
                 "${nrfSDK}/modules/nrfx/drivers/include",
+                "${nrfSDK}/components/softdevice/common",
+                "${nrfSDK}/components/ble/common",
                 "${workspaceFolder}/sparkfun_nrf52840_mini/blank/config/",
                 "${workspaceFolder}/sparkfun_nrf52840_mini/blank"
             ],

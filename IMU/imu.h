@@ -13,6 +13,8 @@ void printAGMT(void);
 
 ret_code_t updateAGMT(void);
 
+void getAGMT(uint8_t *data);
+
 typedef struct Data_t {
     app_fifo_t accelX;
     app_fifo_t accelY;

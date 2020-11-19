@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include "boards.h"
 #include "app_util_platform.h"
-#include "app_timer.h"
 #include "nrf_pwr_mgmt.h"
 #include "nrf_drv_clock.h"
 #include "app_error.h"
@@ -33,18 +32,29 @@ NRF_LOG_MODULE_REGISTER();
     __ASM(".global _printf_float");
 #endif
 
+
+
+#define PACKET_SIZE 18
 int main(void) {
     APP_ERROR_CHECK(NRF_LOG_INIT(NULL));
     NRF_LOG_DEFAULT_BACKENDS_INIT();
     APP_ERROR_CHECK(nrf_pwr_mgmt_init());
+    initBLE();
+
     initDataChannels();
     APP_ERROR_CHECK(initIMU());
     initMyoware();
+
     NRF_LOG_INFO("FANTM Alpha firmware initialized. \n\r");
+    uint8_t agmtData[PACKET_SIZE];
+    uint16_t agmtDataSize = PACKET_SIZE;
+    ret_code_t errCode;
     while (true)
     {
         if (printFlag) {
-            printAGMT();
+            getAGMT(agmtData);
+            //printAGMT();
+            writeBLE(agmtData, &agmtDataSize);
             printFlag = false;
         }
         if (readFlag) {

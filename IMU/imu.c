@@ -54,7 +54,7 @@ static int16_t reduceFIFO(app_fifo_t *fifo) {
     uint8_t poppedDataL;
     int accumulator = 0;
     int counter = 0;
-    CRITICAL_REGION_ENTER();
+    //CRITICAL_REGION_ENTER();
     while ((errCode = app_fifo_get(fifo, &poppedDataH)) != NRF_ERROR_NOT_FOUND) {
         if (app_fifo_get(fifo, &poppedDataL) != NRF_SUCCESS) {
             break;
@@ -65,12 +65,12 @@ static int16_t reduceFIFO(app_fifo_t *fifo) {
         counter++;
     }
     if (counter == 0) {
-        CRITICAL_REGION_EXIT();
+        //CRITICAL_REGION_EXIT();
         return 0;
     } 
         
     int16_t ret = (int16_t) (accumulator / counter);
-    CRITICAL_REGION_EXIT();
+    //CRITICAL_REGION_EXIT();
     return ret; 
 }
 
@@ -150,11 +150,49 @@ void printAGMT(void) {
     magX = reduceFIFO(&(dataStore.magX));
     magY = reduceFIFO(&(dataStore.magY));
     magZ = reduceFIFO(&(dataStore.magZ));
-    NRF_LOG_INFO("===========DATA===========");
-    NRF_LOG_INFO("ACCEL(X: %d, Y: %d, Z: %d)", accelX, accelY, accelZ);
-    NRF_LOG_INFO("GYRO(X: %d, Y: %d, Z: %d)",  gyroX, gyroY, gyroZ);
-    NRF_LOG_INFO("MAG(X: %d, Y: %d, Z: %d)", magX, magY, magZ);
-    NRF_LOG_INFO("==========================\n");
+    NRF_LOG_INFO("START========================");
+    NRF_LOG_INFO("ACCEL,%d,%d,%d", accelX, accelY, accelZ);
+    NRF_LOG_INFO("GYRO,%d,%d,%d",  gyroX, gyroY, gyroZ);
+    NRF_LOG_INFO("MAG,%d,%d,%d", magX, magY, magZ);
+    NRF_LOG_INFO("END==========================\n");
+}
+
+void getAGMT(uint8_t *data) {
+    int16_t accelX, accelY, accelZ;
+    int16_t gyroX, gyroY, gyroZ;
+    int16_t magX, magY, magZ;
+    accelX = reduceFIFO(&(dataStore.accelX));
+    accelY = reduceFIFO(&(dataStore.accelY));
+    accelZ = reduceFIFO(&(dataStore.accelZ));
+    gyroX = reduceFIFO(&(dataStore.gyroX));
+    gyroY = reduceFIFO(&(dataStore.gyroY));
+    gyroZ = reduceFIFO(&(dataStore.gyroZ));
+    magX = reduceFIFO(&(dataStore.magX));
+    magY = reduceFIFO(&(dataStore.magY));
+    magZ = reduceFIFO(&(dataStore.magZ));
+    NRF_LOG_INFO("START========================");
+    NRF_LOG_INFO("ACCEL,%d,%d,%d", accelX, accelY, accelZ);
+    NRF_LOG_INFO("GYRO,%d,%d,%d",  gyroX, gyroY, gyroZ);
+    NRF_LOG_INFO("MAG,%d,%d,%d", magX, magY, magZ);
+    NRF_LOG_INFO("END==========================\n");
+    data[0] = accelX & 0x00ff;
+    data[1] = ((accelX & 0xff00) >> 8);
+    data[2] = accelY & 0x00ff;
+    data[3] = ((accelY & 0xff00) >> 8);
+    data[4] = accelZ & 0x00ff;
+    data[5] = ((accelZ & 0xff00) >> 8);
+    data[6] = gyroX & 0x00ff;
+    data[7] = ((gyroX & 0xff00) >> 8);
+    data[8] = gyroY & 0x00ff;
+    data[9] = ((gyroY & 0xff00) >> 8);
+    data[10] = gyroZ & 0x00ff;
+    data[11] = ((gyroZ & 0xff00) >> 8);
+    data[12] = magX & 0x00ff;
+    data[13] = ((magX & 0xff00) >> 8);
+    data[14] = magY & 0x00ff;
+    data[15] = ((magY & 0xff00) >> 8);
+    data[16] = magZ & 0x00ff;
+    data[17] = ((magZ & 0xff00) >> 8);
 }
 
 ret_code_t initIMU() {

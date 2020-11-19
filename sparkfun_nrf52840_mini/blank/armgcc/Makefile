@@ -12,6 +12,7 @@ $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
 SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/components/libraries/bsp/bsp.c \
+  $(SDK_ROOT)/components/libraries/bsp/bsp_btn_ble.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_rtt.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_uart.c \
@@ -19,11 +20,10 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_str_formatter.c \
   $(SDK_ROOT)/components/boards/boards.c \
+  $(SDK_ROOT)/components/libraries/atomic_flags/nrf_atflags.c \
   $(SDK_ROOT)/components/libraries/util/app_error.c \
   $(SDK_ROOT)/components/libraries/util/app_error_handler_gcc.c \
   $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
-  $(SDK_ROOT)/components/libraries/scheduler/app_scheduler.c \
-  $(SDK_ROOT)/components/libraries/timer/app_timer2.c \
   $(SDK_ROOT)/components/libraries/fifo/app_fifo.c \
   $(SDK_ROOT)/components/libraries/util/app_util_platform.c \
   $(SDK_ROOT)/components/libraries/timer/drv_rtc.c \
@@ -33,10 +33,10 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/balloc/nrf_balloc.c \
   $(SDK_ROOT)/external/fprintf/nrf_fprintf.c \
   $(SDK_ROOT)/external/fprintf/nrf_fprintf_format.c \
-  $(SDK_ROOT)/components/libraries/gfx/nrf_gfx.c \
   $(SDK_ROOT)/components/libraries/memobj/nrf_memobj.c \
   $(SDK_ROOT)/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c \
   $(SDK_ROOT)/components/libraries/queue/nrf_queue.c \
+  $(SDK_ROOT)/components/libraries/timer/app_timer2.c \
   $(SDK_ROOT)/components/libraries/ringbuf/nrf_ringbuf.c \
   $(SDK_ROOT)/components/libraries/experimental_section_vars/nrf_section_iter.c \
   $(SDK_ROOT)/components/libraries/sortlist/nrf_sortlist.c \
@@ -45,8 +45,6 @@ SRC_FILES += \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_spi.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
-  $(SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_nvic.c \
-  $(SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_soc.c \
   $(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
@@ -59,11 +57,25 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spim.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
+  $(SDK_ROOT)/components/ble/common/ble_advdata.c \
+  $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \
+  $(SDK_ROOT)/components/ble/common/ble_conn_params.c \
+  $(SDK_ROOT)/components/ble/common/ble_conn_state.c \
+  $(SDK_ROOT)/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c \
+  $(SDK_ROOT)/components/ble/common/ble_srv_common.c \
+  $(SDK_ROOT)/components/ble/nrf_ble_gatt/nrf_ble_gatt.c \
+  $(SDK_ROOT)/components/ble/nrf_ble_qwr/nrf_ble_qwr.c \
+  $(SDK_ROOT)/external/utf_converter/utf.c \
+  $(SDK_ROOT)/components/ble/ble_services/ble_nus/ble_nus.c \
+  $(SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
+  $(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
+  $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/IMU/ak09916.c \
   $(PROJ_DIR)/IMU/icm20948.c \
   $(PROJ_DIR)/IMU/imu.c \
   $(PROJ_DIR)/IMU/imu_handlers.c \
+  $(PROJ_DIR)/BLE/fantmBLE.c \
   $(PROJ_DIR)/myoware.c \
   $(PROJ_DIR)/data.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
@@ -71,6 +83,10 @@ SRC_FILES += \
 #$(SDK_ROOT)/components/libraries/mem_manager/mem_manager.c \
 # Include folders common to all targets
 INC_FOLDERS += \
+  $(SDK_ROOT)/components/softdevice/s140/headers \
+  $(SDK_ROOT)/components/softdevice/common \
+  $(SDK_ROOT)/components/softdevice/mbr/headers \
+  $(SDK_ROOT)/components/libraries/atomic_flags \
   $(SDK_ROOT)/components \
   $(SDK_ROOT)/modules/nrfx/mdk \
   $(SDK_ROOT)/components/libraries/scheduler \
@@ -80,6 +96,46 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/strerror \
   $(SDK_ROOT)/components/toolchain/cmsis/include \
   $(SDK_ROOT)/components/libraries/timer \
+  $(SDK_ROOT)/components/ble/ble_services/ble_ancs_c \
+  $(SDK_ROOT)/components/ble/ble_services/ble_ias_c \
+  $(SDK_ROOT)/components/ble/ble_services/ble_gls \
+  $(SDK_ROOT)/components/ble/ble_advertising \
+  $(SDK_ROOT)/components/libraries/svc \
+  $(SDK_ROOT)/components/ble/ble_services/ble_bas_c \
+  $(SDK_ROOT)/components/ble/ble_services/ble_hrs_c \
+  $(SDK_ROOT)/components/ble/ble_dtm \
+  $(SDK_ROOT)/components/ble/ble_services/ble_rscs_c \
+  $(SDK_ROOT)/components/ble/common \
+  $(SDK_ROOT)/components/ble/ble_services/ble_lls \
+  $(SDK_ROOT)/components/ble/ble_services/ble_ans_c \
+  $(SDK_ROOT)/components/ble/ble_services/ble_nus_c \
+  $(SDK_ROOT)/components/ble/ble_services/ble_ias \
+  $(SDK_ROOT)/components/ble/ble_services/ble_dfu \
+  $(SDK_ROOT)/components/ble/ble_services/ble_lbs \
+  $(SDK_ROOT)/components/ble/ble_services/ble_hts \
+  $(SDK_ROOT)/components/ble/ble_services/ble_cts_c \
+  $(SDK_ROOT)/components/ble/ble_services/ble_cscs \
+  $(SDK_ROOT)/components/ble/ble_services/ble_bas \
+  $(SDK_ROOT)/components/ble/ble_link_ctx_manager \
+  $(SDK_ROOT)/components/ble/ble_services/ble_nus \
+  $(SDK_ROOT)/components/ble/ble_services/ble_hids \
+  $(SDK_ROOT)/components/nfc/ndef/connection_handover/ble_oob_advdata \
+  $(SDK_ROOT)/components/nfc/ndef/connection_handover/ble_pair_msg \
+  $(SDK_ROOT)/components/ble/peer_manager \
+  $(SDK_ROOT)/components/ble/ble_services/ble_lbs_c \
+  $(SDK_ROOT)/components/nfc/ndef/connection_handover/ble_pair_lib \
+  $(SDK_ROOT)/components/libraries/crypto \
+  $(SDK_ROOT)/components/ble/ble_racp \
+  $(SDK_ROOT)/components/ble/ble_services/ble_hrs \
+  $(SDK_ROOT)/components/ble/ble_services/ble_rscs \
+  $(SDK_ROOT)/components/libraries/mem_manager \
+  $(SDK_ROOT)/components/libraries/ringbuf \
+  $(SDK_ROOT)/components/ble/ble_services/ble_tps \
+  $(SDK_ROOT)/components/nfc/ndef/parser/message \
+  $(SDK_ROOT)/components/ble/ble_services/ble_dis \
+  $(SDK_ROOT)/components/nfc/ndef/uri \
+  $(SDK_ROOT)/components/ble/nrf_ble_gatt \
+  $(SDK_ROOT)/components/ble/nrf_ble_qwr \
   $(SDK_ROOT)/components/libraries/util \
   ../config \
   $(SDK_ROOT)/components/libraries/balloc \
@@ -93,6 +149,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/experimental_section_vars \
   $(SDK_ROOT)/integration/nrfx/legacy \
   $(SDK_ROOT)/components/libraries/mutex \
+  $(SDK_ROOT)/components/libraries/timer \
   $(PROJ_DIR) \
   $(SDK_ROOT)/components/libraries/gfx \
   $(SDK_ROOT)/components/libraries/delay \
@@ -109,6 +166,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/external/fprintf \
   $(SDK_ROOT)/components/libraries/log/src \
   $(PROJ_DIR)/IMU \
+  $(PROJ_DIR)/BLE \
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -126,6 +184,9 @@ CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
 CFLAGS += -DNRF52840_XXAA
 CFLAGS += -DBOARD_SPARKFUN_NRF52840_MINI
+CFLAGS += -DNRF_SD_BLE_API_VERSION=7
+CFLAGS += -DS140
+CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
 CFLAGS += -Wall #-Werror
@@ -147,6 +208,9 @@ ASMFLAGS += -DBOARD_SPARKFUN_NRF52840_MINI
 ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DFLOAT_ABI_HARD
 ASMFLAGS += -DNRF52840_XXAA
+ASMFLAGS += -DNRF_SD_BLE_API_VERSION=7
+ASMFLAGS += -DS140
+ASMFLAGS += -DSOFTDEVICE_PRESENT
 
 # Linker flags
 LDFLAGS += $(OPT)
