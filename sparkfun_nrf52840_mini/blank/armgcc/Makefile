@@ -281,3 +281,6 @@ mount-nrf:
 uf2bootload: $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex dfu-package
 	uf2conv.py -f 0xADA52840 -c -o _build/nrf52840_xxaa.uf2 _build/nrf52840_xxaa.hex
 #	cp _build/nrf52840_xxaa.uf2 /mnt/f/
+
+update-schema:
+	cd ../../../schema/ && python3 main.py -p ../telemetry/

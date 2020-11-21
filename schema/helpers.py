@@ -91,13 +91,13 @@ def get_data_model():
     
     return packet_json
 
-def write_header_file(data):
+def write_header_file(data, path):
     contents = build_header_file(data)
-    with open(HEADER_OUT_FILE, "w") as out:
+    with open("{}{}".format(path, HEADER_OUT_FILE), "w") as out:
         out.write(contents)
 
-def write_source_file(data):
+def write_source_file(data, path):
     contents = build_source_file(data)
-    with open(SOURCE_OUT_FILE, "w") as out:
+    with open("{}{}".format(path, SOURCE_OUT_FILE), "w") as out:
         out.write(contents)
     

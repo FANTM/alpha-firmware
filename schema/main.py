@@ -16,19 +16,19 @@ def verify():
     print("Valid packet")  
     
 
-def main(only_verify):
+def main(only_verify, path):
     verify()
     if only_verify:
         return
     
     data = get_data_model()
-    write_header_file(data)
-    write_source_file(data)
+    write_header_file(data, path)
+    write_source_file(data, path)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Verify and build a single source of truth schema used for bluetooth communication')
     parser.add_argument('-v', "--verify", help="Just verify the validity of the schema", action="store_true")
-    #parser.add_argument('-c', "--cprogram", help="Generate a header file (.h) for a C program", action="store_true")
+    parser.add_argument('-p', "--path", help="relative path to where you want the files to be output (without file name)", default="./")
     args = parser.parse_args()
 
-    main(args.verify)
+    main(args.verify, args.path)
