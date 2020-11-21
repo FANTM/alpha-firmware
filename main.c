@@ -17,6 +17,8 @@
 
 #include "imu.h"
 #include "myoware.h"
+#include "packet.h"
+#include "fantmBLE.h"
 
 #define NRF_LOG_MODULE_NAME fantm
 #define NRF_LOG_LEVEL       6
@@ -32,9 +34,6 @@ NRF_LOG_MODULE_REGISTER();
     __ASM(".global _printf_float");
 #endif
 
-
-
-#define PACKET_SIZE 18
 int main(void) {
     APP_ERROR_CHECK(NRF_LOG_INIT(NULL));
     NRF_LOG_DEFAULT_BACKENDS_INIT();
@@ -46,15 +45,14 @@ int main(void) {
     initMyoware();
 
     NRF_LOG_INFO("FANTM Alpha firmware initialized. \n\r");
-    uint8_t agmtData[PACKET_SIZE];
-    uint16_t agmtDataSize = PACKET_SIZE;
+    Packet_t packet;
     ret_code_t errCode;
     while (true)
     {
         if (printFlag) {
-            getAGMT(agmtData);
+            getAGMT(&packet);
             //printAGMT();
-            writeBLE(agmtData, &agmtDataSize);
+            telemetrySend(&packet);
             printFlag = false;
         }
         if (readFlag) {

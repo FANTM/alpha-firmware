@@ -2,6 +2,7 @@
 #define __fantm_imu_h__
 
 #include "app_fifo.h"
+#include "packet.h"
 
 /**
  * This file is the API for the entire IMU folder, the rest should stay internal! 
@@ -13,7 +14,7 @@ void printAGMT(void);
 
 ret_code_t updateAGMT(void);
 
-void getAGMT(uint8_t *data);
+void getAGMT(Packet_t *packet);
 
 typedef struct Data_t {
     app_fifo_t accelX;

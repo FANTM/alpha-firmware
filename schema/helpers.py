@@ -13,13 +13,12 @@ def get_data_type(data_item):
     return "{}int{}_t".format('' if signed else 'u', size * 8)
 
 def gen_packet_struct(data):
-    STRUCT_NAME = '{}_t'.format(NAME.capitalize())
-    output_string = "typedef struct " + STRUCT_NAME +" {\n"
+    output_string = "typedef struct Packet_t {\n"
     for item in data:
         data_type = get_data_type(item)
         output_string += "{} {};\n".format(data_type, item.get('name'))
     
-    output_string += "} " + STRUCT_NAME + ";\n\n"
+    output_string += "} Packet_t;\n"
     return output_string
 
 # Generalize to take any file name
@@ -29,24 +28,37 @@ def gen_open_header_guard():
 def gen_close_header_guard():
     return "\n#endif\n"
 
+def gen_packet_size_define(data):
+    num_bytes = 0
+    for item in data:
+        num_bytes += item.get('size')
+    return "#define PACKET_SIZE {}".format(num_bytes)
+
 def get_byte(value, position):
     """Big endian"""
-    return "0xff && (data->{} >> {})".format(value, position * 8)
+    return "0xff && (packet->{} >> {})".format(value, position * 8)
+
+def gen_telemetry_send_declaration():
+    return "void telemetrySend(Packet_t *data);"
 
 def gen_telemetry_send_function(data):
-    func_start = "void telemetrySend(Pac *data, uint16_t *len) {"
-    func_body  = "writeBLE(data, len);"
+    func_start = "void telemetrySend(Packet_t *packet) {"
+    func_body  = """
+    uint16_t size=PACKET_SIZE;
+    uint8_t data[PACKET_SIZE];
+    serializePacket(packet, data);
+    writeBLE(data, &size);"""
     func_end   = "}"
     return "{}\n{}\n{}".format(func_start, func_body, func_end)
 
-def gen_byte_array_declaration():
-    return "void serializePacket(Packet_t *packet);"
+def gen_serialize_packet_declaration():
+    return "static void serializePacket(Packet_t *packet, uint8_t *data);"
 
-def gen_byte_array_function(data):
+def gen_serialize_packet_function(data):
     """
     Using the struct format we define, creates a function that packs the data into a byte array
     """
-    func_start = "void serializePacket(Packet_t *packet) {{\nuint8_t data[{}];\n"
+    func_start = "static void serializePacket(Packet_t *packet, uint8_t *data) {\n"
     lines = ""
     func_end = "\n}\n"
     num_bytes = 0
@@ -57,28 +69,36 @@ def gen_byte_array_function(data):
             lines += "data[{}] = {};\n".format(num_bytes, get_byte(item.get('name'), size))
             num_bytes = num_bytes + 1
     
-    func_start = func_start.format(num_bytes)
     return "{}{}{}".format(
         func_start, 
         lines, 
         func_end)
 
 def gen_include(name):
-    return "#include {}\n".format(name)
+    return "#include \"{}\"\n".format(name)
 
 def build_header_file(data):
-    output_string = "{}\n{}\n{}\n{}".format(
-        gen_open_header_guard(), 
+    output_string = "{}\n{}\n{}\n{}\n{}\n{}".format(
+        gen_open_header_guard(),
+        gen_include("app_util_platform.h"),
+        gen_packet_size_define(data), 
         gen_packet_struct(data),
-        gen_byte_array_declaration(),
+        gen_telemetry_send_declaration(),
         gen_close_header_guard())
     print(output_string)
     return output_string
     
 def build_source_file(data):
-    output_string = "{}\n{}\n".format(
+    output_string = "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n".format(
         gen_include(HEADER_OUT_FILE),
-        gen_byte_array_function(data)
+        gen_include("fantmBLE.h"),
+        gen_include("app_util_platform.h"),
+        gen_include("nordic_common.h"),
+        gen_include("boards.h"),
+        gen_include("app_error.h"),
+        gen_serialize_packet_declaration(),
+        gen_serialize_packet_function(data),
+        gen_telemetry_send_function(data)
     )
     print(output_string)
     return output_string

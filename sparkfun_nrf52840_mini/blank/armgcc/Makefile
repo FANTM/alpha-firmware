@@ -76,6 +76,7 @@ SRC_FILES += \
   $(PROJ_DIR)/IMU/imu.c \
   $(PROJ_DIR)/IMU/imu_handlers.c \
   $(PROJ_DIR)/telemetry/fantmBLE.c \
+	$(PROJ_DIR)/telemetry/packet.c \
   $(PROJ_DIR)/myoware.c \
   $(PROJ_DIR)/data.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
