@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-## pip install jsonschema
 
 from jsonschema import validate
 from helpers import get_data_model, write_source_file, write_header_file
