@@ -36,7 +36,7 @@ def gen_packet_size_define(data):
 
 def get_byte(value, position):
     """Big endian"""
-    return "0xff && (packet->{} >> {})".format(value, position * 8)
+    return "0xff & (packet->{} >> {})".format(value, position * 8)
 
 def gen_telemetry_send_declaration():
     return "void telemetrySend(Packet_t *data);"
