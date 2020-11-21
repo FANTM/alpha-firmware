@@ -75,7 +75,7 @@ SRC_FILES += \
   $(PROJ_DIR)/IMU/icm20948.c \
   $(PROJ_DIR)/IMU/imu.c \
   $(PROJ_DIR)/IMU/imu_handlers.c \
-  $(PROJ_DIR)/BLE/fantmBLE.c \
+  $(PROJ_DIR)/telemetry/fantmBLE.c \
   $(PROJ_DIR)/myoware.c \
   $(PROJ_DIR)/data.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
@@ -166,7 +166,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/external/fprintf \
   $(SDK_ROOT)/components/libraries/log/src \
   $(PROJ_DIR)/IMU \
-  $(PROJ_DIR)/BLE \
+  $(PROJ_DIR)/telemetry \
 
 # Libraries common to all targets
 LIB_FILES += \

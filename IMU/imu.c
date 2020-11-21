@@ -139,7 +139,7 @@ ret_code_t updateAGMT(void) {
 
 void printAGMT(void) {
     int16_t accelX, accelY, accelZ;
-    int16_t gyroX, gyroY, gyroZ;
+    int16_t gyroX, gyroY, gyroZ; 
     int16_t magX, magY, magZ;
     accelX = reduceFIFO(&(dataStore.accelX));
     accelY = reduceFIFO(&(dataStore.accelY));
