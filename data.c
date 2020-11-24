@@ -22,6 +22,7 @@
 /* Stores functions that are called in the timer loop. Other modules store their data polling callbacks here */
 static void (*dataCallbacks[NUM_CHANNELS])();
 static int activeChannels = 0;  // How many channels are currently populated by another module
+static int callbacks = 0;
 static const nrf_drv_timer_t harvestTimer = NRF_DRV_TIMER_INSTANCE(2);
 static nrf_ppi_channel_t     channels[NUM_CHANNELS];  // PPI channels, not used for now
 static int ticks = 0;
@@ -43,7 +44,7 @@ static void timerHandler(nrf_timer_event_t event_type, void * p_context)
 
 void harvestData(void) {
     int i;
-    for (i = 0; i < activeChannels; i++) {
+    for (i = 0; i < callbacks; i++) {
         dataCallbacks[i]();
     }
 }
@@ -91,10 +92,10 @@ ret_code_t attachDataChannel(uint32_t taskAddr, bool usePPI) {
                                           timerCompareEventAddr,
                                           taskAddr);
         nrf_drv_ppi_channel_enable(channels[activeChannels]);
+        activeChannels++;
     } else {
-        dataCallbacks[activeChannels] = (void (*)()) taskAddr;
+        dataCallbacks[callbacks++] = (void (*)()) taskAddr;
     }
-    activeChannels++;
     CRITICAL_REGION_EXIT();            
     return err_code;                                            
 }

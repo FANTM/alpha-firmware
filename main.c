@@ -46,15 +46,15 @@ int main(void) {
     NRF_LOG_INFO("FANTM Alpha firmware initialized. \n\r");
     while (true)
     {
+        if (readFlag) {  // Called more frequently, updates internal readings
+            harvestData();
+            readFlag = false;
+        }
         if (printFlag) {  // Sends the data out and prints it
             reduceAGMT();
             telemetrySend(&packet);
             dumpPacket(&packet);
             printFlag = false;
-        }
-        if (readFlag) {  // Called more frequently, updates internal readings
-            updateAGMT();
-            readFlag = false;
         }
         nrf_pwr_mgmt_run();
         NRF_LOG_FLUSH();

@@ -18,12 +18,12 @@
 
 #include "nrf_log.h"
 
-#define SAMPLES_IN_BUFFER 1  // Number of times _sample is called before we generate a "finished" callback
+#define SAMPLES_IN_BUFFER 10  // Number of times _sample is called before we generate a "finished" callback
 
 /* Stores the read samples */
 static nrf_saadc_value_t     m_buffer_pool[2][SAMPLES_IN_BUFFER];
 
-static Packet_t *myoPacket = NULL;  // Needs to be initialized
+static Packet_t *myoPacket = NULL;  // Data packet defined in the main driver. -> myo field needs to be populated
 
 /**
  * Sends a callback to the data polling loop. In this case that callback just samples
