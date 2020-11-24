@@ -35,27 +35,24 @@ NRF_LOG_MODULE_REGISTER();
 #endif
 
 int main(void) {
+    Packet_t packet;
     APP_ERROR_CHECK(NRF_LOG_INIT(NULL));
     NRF_LOG_DEFAULT_BACKENDS_INIT();
     APP_ERROR_CHECK(nrf_pwr_mgmt_init());
     initBLE();
-
     initDataChannels();
-    APP_ERROR_CHECK(initIMU());
-    initMyoware();
-
+    APP_ERROR_CHECK(initIMU(&packet));
+    APP_ERROR_CHECK(initMyoware(&packet));
     NRF_LOG_INFO("FANTM Alpha firmware initialized. \n\r");
-    Packet_t packet;
-    ret_code_t errCode;
     while (true)
     {
-        if (printFlag) {
-            getAGMT(&packet);
-            //printAGMT();
+        if (printFlag) {  // Sends the data out and prints it
+            reduceAGMT();
             telemetrySend(&packet);
+            dumpPacket(&packet);
             printFlag = false;
         }
-        if (readFlag) {
+        if (readFlag) {  // Called more frequently, updates internal readings
             updateAGMT();
             readFlag = false;
         }

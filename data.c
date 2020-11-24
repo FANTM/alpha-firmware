@@ -22,7 +22,7 @@
 /* Stores functions that are called in the timer loop. Other modules store their data polling callbacks here */
 static void (*dataCallbacks[NUM_CHANNELS])();
 static int activeChannels = 0;  // How many channels are currently populated by another module
-static const nrf_drv_timer_t harvestTimer = NRF_DRV_TIMER_INSTANCE(1);
+static const nrf_drv_timer_t harvestTimer = NRF_DRV_TIMER_INSTANCE(2);
 static nrf_ppi_channel_t     channels[NUM_CHANNELS];  // PPI channels, not used for now
 static int ticks = 0;
 
@@ -55,16 +55,13 @@ void initDataChannels() {
     ret_code_t err_code;
     readFlag = false;
     printFlag = false;
-    NRF_LOG_INFO("DataChannels Stage 1");
     err_code = nrf_drv_ppi_init();
     APP_ERROR_CHECK(err_code);
-    NRF_LOG_INFO("DataChannels Stage 2");
 
     nrf_drv_timer_config_t timer_cfg = NRF_DRV_TIMER_DEFAULT_CONFIG;
     timer_cfg.bit_width = NRF_TIMER_BIT_WIDTH_32;
     err_code = nrf_drv_timer_init(&harvestTimer, &timer_cfg, timerHandler);
     APP_ERROR_CHECK(err_code);
-    NRF_LOG_INFO("DataChannels Stage 3");
 
     /* setup m_timer for compare event every 1ms */
     uint32_t ticks = nrf_drv_timer_ms_to_ticks(&harvestTimer, PERIOD_MS);
@@ -73,11 +70,8 @@ void initDataChannels() {
                                    ticks,
                                    NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK,
                                    true);
-    NRF_LOG_INFO("DataChannels Stage 4");
 
     nrf_drv_timer_enable(&harvestTimer);
-    NRF_LOG_INFO("DataChannels Stage 5");
-
 }
 
 /**

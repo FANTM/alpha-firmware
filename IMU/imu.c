@@ -47,6 +47,7 @@ static app_fifo_t magZFifo;
 static app_fifo_t tempFifo;
 
 static Data_t dataStore;
+static Packet_t *imuPacket = NULL;
 
 // Reduce via the average, no weighting yet
 static int16_t reduceFIFO(app_fifo_t *fifo) {
@@ -55,7 +56,8 @@ static int16_t reduceFIFO(app_fifo_t *fifo) {
     uint8_t poppedDataL;
     int accumulator = 0;
     int counter = 0;
-    //CRITICAL_REGION_ENTER();
+    int16_t ret = 0;
+    CRITICAL_REGION_ENTER();
     while ((errCode = app_fifo_get(fifo, &poppedDataH)) != NRF_ERROR_NOT_FOUND) {
         if (app_fifo_get(fifo, &poppedDataL) != NRF_SUCCESS) {
             break;
@@ -65,14 +67,11 @@ static int16_t reduceFIFO(app_fifo_t *fifo) {
         accumulator += dataWord;
         counter++;
     }
-    if (counter == 0) {
-        //CRITICAL_REGION_EXIT();
-        return 0;
+    if (counter != 0) {
+        ret = (int16_t) (accumulator / counter);
     } 
-        
-    int16_t ret = (int16_t) (accumulator / counter);
-    //CRITICAL_REGION_EXIT();
-    return ret; 
+    CRITICAL_REGION_EXIT();
+    return ret;
 }
 
 static ret_code_t initDataStore(void) {
@@ -138,43 +137,25 @@ ret_code_t updateAGMT(void) {
     return readData();
 }
 
-void printAGMT(void) {
-    int16_t accelX, accelY, accelZ;
-    int16_t gyroX, gyroY, gyroZ; 
-    int16_t magX, magY, magZ;
-    accelX = reduceFIFO(&(dataStore.accelX));
-    accelY = reduceFIFO(&(dataStore.accelY));
-    accelZ = reduceFIFO(&(dataStore.accelZ));
-    gyroX = reduceFIFO(&(dataStore.gyroX));
-    gyroY = reduceFIFO(&(dataStore.gyroY));
-    gyroZ = reduceFIFO(&(dataStore.gyroZ));
-    magX = reduceFIFO(&(dataStore.magX));
-    magY = reduceFIFO(&(dataStore.magY));
-    magZ = reduceFIFO(&(dataStore.magZ));
-    NRF_LOG_INFO("START========================");
-    NRF_LOG_INFO("ACCEL,%d,%d,%d", accelX, accelY, accelZ);
-    NRF_LOG_INFO("GYRO,%d,%d,%d",  gyroX, gyroY, gyroZ);
-    NRF_LOG_INFO("MAG,%d,%d,%d", magX, magY, magZ);
-    NRF_LOG_INFO("END==========================\n");
+void reduceAGMT() {
+    imuPacket->accelX = reduceFIFO(&(dataStore.accelX));
+    imuPacket->accelY = reduceFIFO(&(dataStore.accelY));
+    imuPacket->accelZ = reduceFIFO(&(dataStore.accelZ));
+    imuPacket->gyroX = reduceFIFO(&(dataStore.gyroX));
+    imuPacket->gyroY = reduceFIFO(&(dataStore.gyroY));
+    imuPacket->gyroZ = reduceFIFO(&(dataStore.gyroZ));
+    imuPacket->magX = reduceFIFO(&(dataStore.magX));
+    imuPacket->magY = reduceFIFO(&(dataStore.magY));
+    imuPacket->magZ = reduceFIFO(&(dataStore.magZ));
+    imuPacket->temp = reduceFIFO(&(dataStore.temp));
 }
 
-void getAGMT(Packet_t *packet) {
-    packet->accelX = reduceFIFO(&(dataStore.accelX));
-    packet->accelY = reduceFIFO(&(dataStore.accelY));
-    packet->accelZ = reduceFIFO(&(dataStore.accelZ));
-    packet->gyroX = reduceFIFO(&(dataStore.gyroX));
-    packet->gyroY = reduceFIFO(&(dataStore.gyroY));
-    packet->gyroZ = reduceFIFO(&(dataStore.gyroZ));
-    packet->magX = reduceFIFO(&(dataStore.magX));
-    packet->magY = reduceFIFO(&(dataStore.magY));
-    packet->magZ = reduceFIFO(&(dataStore.magZ));
-}
-
-ret_code_t initIMU() {
+ret_code_t initIMU(Packet_t *packet) {
     APP_ERROR_CHECK(initDataStore());
     APP_ERROR_CHECK(initIcm20948());
     APP_ERROR_CHECK(initAK09916());
     changeBank(BANK_0);  // After configuration we don't have much reason to leave BANK_0
+    imuPacket = packet;
     attachDataChannel((uint32_t) updateAGMT, false);
     return NRF_SUCCESS;
 }

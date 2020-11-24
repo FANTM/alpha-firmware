@@ -8,13 +8,13 @@
  * This file is the API for the entire IMU folder, the rest should stay internal! 
  */
 
-ret_code_t initIMU();
+ret_code_t initIMU(Packet_t *packet);
 
 void printAGMT(void);
 
 ret_code_t updateAGMT(void);
 
-void getAGMT(Packet_t *packet);
+void reduceAGMT();
 
 typedef struct Data_t {
     app_fifo_t accelX;

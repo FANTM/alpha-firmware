@@ -10,6 +10,9 @@
 
 #include "app_error.h"
 
+#define NRF_LOG_MODULE_NAME fantm
+#include "nrf_log.h"
+
 static void serializePacket(Packet_t *packet, uint8_t *data);
 static void serializePacket(Packet_t *packet, uint8_t *data) {
 data[0] = 0xff & (packet->accelX >> 8);
@@ -32,6 +35,8 @@ data[16] = 0xff & (packet->magZ >> 8);
 data[17] = 0xff & (packet->magZ >> 0);
 data[18] = 0xff & (packet->temp >> 8);
 data[19] = 0xff & (packet->temp >> 0);
+data[20] = 0xff & (packet->myo >> 8);
+data[21] = 0xff & (packet->myo >> 0);
 
 }
 
@@ -42,3 +47,19 @@ void telemetrySend(Packet_t *packet) {
     serializePacket(packet, data);
     writeBLE(data, &size);
 }
+void dumpPacket(Packet_t *packet) {
+NRF_LOG_INFO("==START==");
+NRF_LOG_INFO("%s: %d", "accelX", packet->accelX);
+NRF_LOG_INFO("%s: %d", "accelY", packet->accelY);
+NRF_LOG_INFO("%s: %d", "accelZ", packet->accelZ);
+NRF_LOG_INFO("%s: %d", "gyroX", packet->gyroX);
+NRF_LOG_INFO("%s: %d", "gyroY", packet->gyroY);
+NRF_LOG_INFO("%s: %d", "gyroZ", packet->gyroZ);
+NRF_LOG_INFO("%s: %d", "magX", packet->magX);
+NRF_LOG_INFO("%s: %d", "magY", packet->magY);
+NRF_LOG_INFO("%s: %d", "magZ", packet->magZ);
+NRF_LOG_INFO("%s: %d", "temp", packet->temp);
+NRF_LOG_INFO("%s: %d", "myo", packet->myo);
+NRF_LOG_INFO("==END==");
+}
+

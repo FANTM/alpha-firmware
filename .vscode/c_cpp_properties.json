@@ -37,6 +37,10 @@
                 "${nrfSDK}/modules/nrfx/drivers/include",
                 "${nrfSDK}/components/softdevice/common",
                 "${nrfSDK}/components/ble/common",
+                "${nrfSDK}/components/ble/ble_advertising",
+                "${nrfSDK}/components/ble/nrf_ble_qwr",
+                "${nrfSDK}/components/softdevice/mbr",
+                "${nrfSDK}/components/softdevice/s140/headers",
                 "${workspaceFolder}/sparkfun_nrf52840_mini/blank/config/",
                 "${workspaceFolder}/sparkfun_nrf52840_mini/blank"
             ],

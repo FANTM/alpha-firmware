@@ -52,6 +52,17 @@ typedef enum ICMRegBank1_t {
 } ICMRegBank1_t;
 
 typedef enum ICMRegBank2_t {
+    GYRO_SMPLRT_DIV = 0x00,
+    GYRO_CONFIG_1,
+    GYRO_CONFIG_2,
+    ODR_ALIGN_EN = 0x09,
+    ACCEL_SMPLRT_DIV_1,
+    ACCEL_SMPLRT_DIV_2,
+    ACCEL_INTEL_CTRL,
+    ACCEL_WOM_THR,
+    ACCEL_CONFIG_1,
+    ACCEL_CONFIG_2,
+    TEMP_CONFIG = 0x53,
     BANK2_BANK_SEL = 0x7F
 } ICMRegBank2_t;
 

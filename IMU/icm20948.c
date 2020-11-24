@@ -18,7 +18,8 @@
 
 #define ICM20948_QUEUE_LENGTH     64  
 #define ICM20948_SPI_INSTANCE_ID  0
- 
+#define ICM_WHO_AM_I              0xEA
+
 NRF_SPI_MNGR_DEF(spiManager, ICM20948_QUEUE_LENGTH, ICM20948_SPI_INSTANCE_ID);
 
 static uint8_t cmdBuff[] = {  // Write commands use 2 bytes, read uses just 1
@@ -88,6 +89,7 @@ ret_code_t changeBank(ICMBank_t bank) {
  * Take the ICM out of sleep mode, enabling reading outputs
  */
 ret_code_t wakeUpICM(void) {
+    changeBank(BANK_0);
     ICMReg_t pwrMgmt = {.reg0 = PWR_MGMT_1};
     uint8_t bitmask[] = {2,2,2,2,2,2,0,2};
     return writeICM(&pwrMgmt, bitmask);
@@ -134,22 +136,51 @@ ret_code_t sleepICM(void) {
  * 0   | ---------- | Reserved
  */ 
 static ret_code_t configUserCtrl(void) {
-    ICMReg_t config;
-    config.reg0 = USER_CTRL;
+    changeBank(BANK_0);
+    ICMReg_t config = {.reg0 = USER_CTRL};
     uint8_t bitmask[] = {2, 0, 0, 1, 1, 0, 0, 0};
     return writeICM(&config, bitmask);
+}
+
+static ret_code_t configGyro(void) {
+    changeBank(BANK_2);
+    ret_code_t errCode;
+    ICMReg_t config = {.reg2 = GYRO_CONFIG_1};
+    uint8_t bitmask[] = {1,0,0,1, 1,0,2,2};  // 0x19 (top 2 bits are reserved!)
+    errCode = writeICM(&config, bitmask);
+
+    if (errCode != NRF_SUCCESS) return errCode;
+
+    config.reg2 = GYRO_SMPLRT_DIV;
+    uint8_t smplBitmask[] = {0,0,1,0, 0,0,0,0};  // 0x04 - 220Hz sample rate
+    return writeICM(&config, smplBitmask);
+}
+
+static ret_code_t configAccel(void) {
+    changeBank(BANK_2);
+    ret_code_t errCode;
+    ICMReg_t config = {.reg2 = ACCEL_CONFIG_1};
+    uint8_t accelConfigBitmask[] = {1,0,0,1, 1,2,2,2};
+    errCode = writeICM(&config, accelConfigBitmask);
+    
+    if (errCode != NRF_SUCCESS) return errCode;
+
+    config.reg2 = ACCEL_SMPLRT_DIV_2;
+    uint8_t accelSmplBitmask[] = {0,0,1,0, 0,0,0,0};
+    return writeICM(&config, accelSmplBitmask);
 }
 
 /** 
  * Call all of the needed configuration register writes.
  */
 ret_code_t configICM(void) {
-    ret_code_t errCode;
+    APP_ERROR_CHECK(configUserCtrl());
 
-    if ((errCode = configUserCtrl()) != NRF_SUCCESS) 
-        return errCode;
-    
-    return errCode;
+    APP_ERROR_CHECK(configGyro());
+
+    APP_ERROR_CHECK(configAccel());
+
+    return NRF_SUCCESS;
 }
 
 /**
@@ -254,10 +285,15 @@ ret_code_t writeICM(ICMReg_t *reg, uint8_t *data) {
 ret_code_t initIcm20948(void) {
     ICMReg_t whoami = {.reg0 = WHO_AM_I};
     APP_ERROR_CHECK(initSpi0Master());
-    APP_ERROR_CHECK(changeBank(BANK_0));
-    //APP_ERROR_CHECK(resetICM()); Dont need to reset, but can re-enable for testing
+    APP_ERROR_CHECK(resetICM()); 
+    nrf_delay_ms(50);
     APP_ERROR_CHECK(wakeUpICM());
     APP_ERROR_CHECK(configICM());
-    NRF_LOG_INFO("==WHOAMI: %d==", synchReadICM(&whoami));
+    APP_ERROR_CHECK(changeBank(BANK_0));
+
+    if (synchReadICM(&whoami) != ICM_WHO_AM_I) {
+        NRF_LOG_INFO("Failed to identify ICM");
+    }
+
     return NRF_SUCCESS;
 }

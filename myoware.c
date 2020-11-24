@@ -9,8 +9,11 @@
 #include "nrf_delay.h"
 #include "app_util_platform.h"
 #include "nrf_pwr_mgmt.h"
+
 #include "myoware.h"
 #include "data.h"
+#include "packet.h"
+
 #define NRF_LOG_MODULE_NAME fantm
 
 #include "nrf_log.h"
@@ -19,6 +22,8 @@
 
 /* Stores the read samples */
 static nrf_saadc_value_t     m_buffer_pool[2][SAMPLES_IN_BUFFER];
+
+static Packet_t *myoPacket = NULL;  // Needs to be initialized
 
 /**
  * Sends a callback to the data polling loop. In this case that callback just samples
@@ -47,6 +52,7 @@ static void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
             accumulator += p_event->data.done.p_buffer[i];
         }
         accumulator /= SAMPLES_IN_BUFFER;
+        myoPacket->myo = (uint16_t) accumulator;
     }
 }
 
@@ -76,8 +82,9 @@ static void initSaadc(void)
 /**
  * Initializes each part of the myoware setup, connecting hardware and handlers.
  */ 
-ret_code_t initMyoware(void) {
+ret_code_t initMyoware(Packet_t *packet) {
     initSaadc();
     initSamplingEvent();
+    myoPacket = packet;
     return NRF_SUCCESS;
 }

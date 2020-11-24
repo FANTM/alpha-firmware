@@ -284,4 +284,4 @@ uf2bootload: $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex dfu-package
 #	cp _build/nrf52840_xxaa.uf2 /mnt/f/
 
 update-schema:
-	cd ../../../schema/ && python3 main.py -p ../telemetry/
+	cd ../../../bt-telemetry-schema/ && python3 main.py -p ../telemetry/

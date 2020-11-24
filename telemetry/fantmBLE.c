@@ -304,11 +304,14 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
+            NRF_LOG_INFO("Disconnected");
+            NRF_LOG_INFO("ID: %d", p_ble_evt->evt.gap_evt.params.disconnected.reason);
             // LED indication will be changed when advertising starts.
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             break;
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
+            NRF_LOG_INFO("Update PHY");
         {
             ble_gap_phys_t const phys =
             {
@@ -321,24 +324,28 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 
         case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
             // Pairing not supported
+            NRF_LOG_INFO("Sec params req.");
             err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL);
             APP_ERROR_CHECK(err_code);
             break;
 
         case BLE_GATTS_EVT_SYS_ATTR_MISSING:
+            NRF_LOG_INFO("GATT sys missing");
             // No system attributes have been stored.
             err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
             APP_ERROR_CHECK(err_code);
             break;
 
         case BLE_GATTC_EVT_TIMEOUT:
+            NRF_LOG_INFO("GATT client tiemout");
             // Disconnect on GATT Client timeout event.
             err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
                                              BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
             break;
 
-        case BLE_GATTS_EVT_TIMEOUT:
+        case BLE_GATTS_EVT_TIMEOUT:            
+            NRF_LOG_INFO("GATT server timeout");
             // Disconnect on GATT Server timeout event.
             err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
                                              BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
