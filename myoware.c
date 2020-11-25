@@ -18,7 +18,7 @@
 
 #include "nrf_log.h"
 
-#define SAMPLES_IN_BUFFER 10  // Number of times _sample is called before we generate a "finished" callback
+#define SAMPLES_IN_BUFFER 1  // Number of times _sample is called before we generate a "finished" callback
 
 /* Stores the read samples */
 static nrf_saadc_value_t     m_buffer_pool[2][SAMPLES_IN_BUFFER];

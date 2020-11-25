@@ -17,7 +17,7 @@
 #include "nrf_log.h"
 
 #define NUM_CHANNELS 4
-#define PERIOD_MS    100
+#define PERIOD_MS    1
 
 /* Stores functions that are called in the timer loop. Other modules store their data polling callbacks here */
 static void (*dataCallbacks[NUM_CHANNELS])();
