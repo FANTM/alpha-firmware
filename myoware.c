@@ -58,13 +58,13 @@ static void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 
 /**
  * Initialize the appropriate HAL drivers, and pins for using the ADC
- * In this case we are using pin A0 -> 2
+ * In this case we are using pin AIN2 -> PIN 4
  */ 
 static void initSaadc(void)
 {
     ret_code_t err_code;
     nrf_saadc_channel_config_t channel_config =
-        NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN0);
+        NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN2);
 
     err_code = nrf_drv_saadc_init(NULL, saadc_callback);
     APP_ERROR_CHECK(err_code);

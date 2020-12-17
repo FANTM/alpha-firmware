@@ -26,6 +26,7 @@ typedef enum ICMRegBank0_t {
     WHO_AM_I = 0x00,
     USER_CTRL = 0x03,
     PWR_MGMT_1 = 0x06,
+    INT_ENABLE = 0x10,
     ACCEL_X_H = 0x2D,
     ACCEL_X_L,
     ACCEL_Y_H,
@@ -44,10 +45,23 @@ typedef enum ICMRegBank0_t {
     EXT_SLV_SENS_DATA_01,
     EXT_SLV_SENS_DATA_02,
     EXT_SLV_SENS_DATA_03,
+    FIFO_EN_1 = 0x66,
+    FIFO_EN_2,
+    FIFO_RST,
+    FIFO_MODE,
+    FIFO_COUNTH = 0x70,
+    FIFO_COUNTL,
+    FIFO_R_W,
     BANK0_BANK_SEL = 0x7F
 } ICMRegBank0_t;
 
 typedef enum ICMRegBank1_t {
+    XA_OFFSET_H = 0x14,
+    XA_OFFSET_L = 0x15,
+    YA_OFFSET_H = 0x17,
+    YA_OFFSET_L = 0x18,
+    ZA_OFFSET_H = 0x1A,
+    ZA_OFFSET_L = 0x1B,
     BANK1_BANK_SEL = 0x7F
 } ICMRegBank1_t;
 
@@ -55,8 +69,14 @@ typedef enum ICMRegBank2_t {
     GYRO_SMPLRT_DIV = 0x00,
     GYRO_CONFIG_1,
     GYRO_CONFIG_2,
-    ODR_ALIGN_EN = 0x09,
-    ACCEL_SMPLRT_DIV_1,
+    XG_OFFSET_H,
+    XG_OFFSET_L,
+    YG_OFFSET_H,
+    YG_OFFSET_L,
+    ZG_OFFSET_H,
+    ZG_OFFSET_L,
+    ODR_ALIGN_EN,
+    ACCEL_SMPLRT_DIV_1 = 0x10,
     ACCEL_SMPLRT_DIV_2,
     ACCEL_INTEL_CTRL,
     ACCEL_WOM_THR,
@@ -88,7 +108,7 @@ typedef union ICMReg_t {
 
 ret_code_t writeICM(ICMReg_t *reg,  uint8_t *data);
 ret_code_t readICM(ICMReg_t *reg,  nrf_spi_mngr_transaction_t *transaction, Data_t *outBuffer,  void (*endHandler)(ret_code_t, void *));
-uint8_t synchReadICM(ICMReg_t *reg);
+ret_code_t synchReadICM(ICMReg_t *reg, size_t size, uint8_t *data);
 ret_code_t changeBank(ICMBank_t bank);
 
 typedef struct HandlerParameters_t {

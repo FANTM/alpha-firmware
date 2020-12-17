@@ -1,0 +1,34 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "make project",
+            "command": "make dfu-package",
+            "options": {
+                "cwd": "sparkfun_nrf52840_mini/blank/armgcc"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Generated task by Ezra"
+        },
+        {
+            "type": "shell",
+            "label": "flash micro",
+            "command": "make bootload SERIAL_PORT=COM3",
+            "options": {
+                "cwd": "sparkfun_nrf52840_mini/blank/armgcc"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "Generated task by Ezra"
+        }
+    ],
+    "version": "2.0.0"
+}

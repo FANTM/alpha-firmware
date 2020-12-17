@@ -1,6 +1,6 @@
 {
     "env": {
-        "nrfSDK": "C:\\Users\\ebole\\Documents\\FANTM\\nRF5_SDK_17.0.2_d674dde"
+        "nrfSDK": "C:\\Users\\Ezra\\Documents\\FANTM\\nRF5_SDK_17.0.2_d674dde"
     },
 
     "configurations": [
@@ -9,7 +9,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${nrfSDK}/components/**",
-                "${nrfSDK}/components",
+                "${nrfSDK}/modules/**",
+                "${nrfSDK}/components",       
+                "${nrfSDK}/components/boards/",
                 "${nrfSDK}/components/libraries/experimental_memobj",
                 "${nrfSDK}/components/libraries/experimental_section_vars",
                 "${nrfSDK}/modules/nrfx/mdk",

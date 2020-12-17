@@ -42,6 +42,7 @@ typedef enum {
 static const uint8_t AK09916_ADDR = 0x0C;
 
 static ret_code_t writeAK0(AKReg_t reg, uint8_t data);
+ret_code_t synchReadAK0Data(int16_t *dest);
 
 static ret_code_t setAK0DataRate(AK09916_Data_Rate_t dataRate) {
     /* Taken from Adafruit repo: https://github.com/adafruit/Adafruit_ICM20X/blob/master/Adafruit_ICM20948.cpp
@@ -142,6 +143,71 @@ static ret_code_t configI2CMaster(void) {
     return writeICM(&config, ctrlBitmask);
 }
 
+ret_code_t calibrateAK09916(int32_t *magBias, int32_t *magScale) {
+    ret_code_t errCode = NRF_SUCCESS;
+    uint16_t sampleCount = 1500;  // We set a 100Hz ODR, so data is avail. every 10ms
+    //int32_t magBias[3] = {0,0,0};
+    //int32_t magScale[3] = {0,0,0};
+    int16_t magMax[3] = {-32753, -32767, -32767},
+            magMin[3] = {32753, 0x7FFF, 0x7FFF},
+            magTemp[3] = {0,0,0};
+    changeBank(BANK_0);
+    for (int i = 0; i < sampleCount; i++) {
+        synchReadAK0Data(magTemp);
+        for (int j = 0; j < 3; j++) {
+            if (magTemp[j] > magMax[j]) {
+                magMax[j] = magTemp[j];
+            }
+            if (magTemp[j] < magMin[j]) {
+                magMin[j] = magTemp[j];
+            }
+        }
+        nrf_delay_ms(12); 
+    }
+
+    // Hard iron!
+    magBias[0] = (magMax[0] + magMin[0]) / 2;
+    magBias[1] = (magMax[1] + magMin[1]) / 2;
+    magBias[2] = (magMax[2] + magMin[2]) / 2;
+    NRF_LOG_INFO("HARD IRONS: %d, %d, %d", magBias[0], magBias[1], magBias[2]);
+
+    magScale[0] = (magMax[0] - magMin[0]) / 2;
+    magScale[1] = (magMax[1] - magMin[1]) / 2;
+    magScale[2] = (magMax[2] - magMin[2]) / 2;
+
+    float avg = magScale[0] + magScale[1] + magScale[2];
+    avg /= 3.0f;
+
+    magScale[0] = avg / ((float) magScale[0]);
+    magScale[0] = avg / ((float) magScale[0]);
+    magScale[0] = avg / ((float) magScale[0]);
+    NRF_LOG_INFO("SOFT IRONS: %d, %d, %d", magScale[0], magScale[1], magScale[2]);
+
+    NRF_LOG_INFO("Mag cal done.");
+    return errCode;
+}
+
+ret_code_t synchReadAK0Data(int16_t *dest) {
+    uint8_t rawResult[8];
+    uint8_t statusByte[1];
+    ICMReg_t reg = {.reg0=EXT_SLV_SENS_DATA_00};
+    ret_code_t errCode = synchReadICM(&reg, 1, statusByte);
+    if (statusByte[0] & 0x01) {
+        reg.reg0 = EXT_SLV_SENS_DATA_01;
+        errCode = synchReadICM(&reg, 8, rawResult);
+        uint8_t status2 = rawResult[7];
+        if (!(status2 & 0x08)) {
+            dest[0] = (int16_t) ((int16_t) rawResult[1] << 8) | rawResult[0];
+            dest[1] = (int16_t) ((int16_t) rawResult[3] << 8) | rawResult[2];
+            dest[2] = (int16_t) ((int16_t) rawResult[5] << 8) | rawResult[4];
+        }
+    }
+
+    NRF_LOG_INFO("READINGS: %d, %d, %d", dest[0], dest[1], dest[2]);
+
+    return errCode;
+}
+
 /* Not only initializes the sensor, but also kicks off continuous readings */
 ret_code_t initAK09916() {
     ret_code_t errCode = NRF_SUCCESS;
@@ -183,5 +249,10 @@ ret_code_t initAK09916() {
     uint8_t ctrlBitmask[] = { 
         1, 0, 0, 1, 0, 0, 0, 1  // 0x89 <- enable + read 9 bytes at a time
     };
-    return writeICM(&reg, ctrlBitmask);
+    if ((errCode = writeICM(&reg, ctrlBitmask)) != NRF_SUCCESS)
+        return errCode;
+
+    int32_t bias[3], scale[3];
+    return NRF_SUCCESS;
+    //return calibrateAK09916(bias, scale);
 }

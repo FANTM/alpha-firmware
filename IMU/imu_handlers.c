@@ -75,12 +75,12 @@ void allDataHandler(ret_code_t resultCode, void *userData) {
     safeAppFifoPut(&dataStore->temp, params->recvBuff[14]);   // TEMP_L
 
     // Reverse insertion order for Mag because it's big endian
-    safeAppFifoPut(&dataStore->magX, params->recvBuff[17]);   // MAGX_L
-    safeAppFifoPut(&dataStore->magX, params->recvBuff[16]);   // MAGX_H
-    safeAppFifoPut(&dataStore->magY, params->recvBuff[19]);   // MAGY_L
-    safeAppFifoPut(&dataStore->magY, params->recvBuff[18]);   // MAGY_H
-    safeAppFifoPut(&dataStore->magZ, params->recvBuff[21]);   // MAGZ_L
-    safeAppFifoPut(&dataStore->magZ, params->recvBuff[20]);   // MAGZ_H
+    safeAppFifoPut(&dataStore->magX, params->recvBuff[17]);   // MAGX_H
+    safeAppFifoPut(&dataStore->magX, params->recvBuff[16]);   // MAGX_L
+    safeAppFifoPut(&dataStore->magY, params->recvBuff[19]);   // MAGY_H
+    safeAppFifoPut(&dataStore->magY, params->recvBuff[18]);   // MAGY_L
+    safeAppFifoPut(&dataStore->magZ, params->recvBuff[21]);   // MAGZ_H
+    safeAppFifoPut(&dataStore->magZ, params->recvBuff[20]);   // MAGZ_L
 
     free(userData);
 }

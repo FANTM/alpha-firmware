@@ -2,7 +2,13 @@ PROJECT_NAME     := spi_master_using_nrf_spi_mngr_pca10056
 TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := _build
 
-SDK_ROOT := /mnt/c/Users/ebole/Documents/FANTM/nRF5_SDK_17.0.2_d674dde/
+
+ifeq ($(OS), Windows_NT)
+SDK_ROOT := C:\Users\Ezra\Documents\FANTM\nRF5_SDK_17.0.2_d674dde
+else
+SDK_ROOT := /mnt/c/Users/Ezra/Documents/FANTM/nRF5_SDK_17.0.2_d674dde/
+endif
+
 PROJ_DIR := ../../..
 
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \

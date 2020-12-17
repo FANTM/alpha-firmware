@@ -63,7 +63,7 @@ static int16_t reduceFIFO(app_fifo_t *fifo) {
             break;
         }
 
-        int16_t dataWord = (poppedDataH << 8) | poppedDataL;
+        int16_t dataWord = ((int16_t) poppedDataH << 8) | poppedDataL;
         accumulator += dataWord;
         counter++;
     }
