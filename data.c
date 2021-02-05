@@ -17,7 +17,7 @@
 #include "nrf_log.h"
 
 #define NUM_CHANNELS 4
-#define PERIOD_MS    1
+#define PERIOD_US    1000
 
 /* Stores functions that are called in the timer loop. Other modules store their data polling callbacks here */
 static void (*dataCallbacks[NUM_CHANNELS])();
@@ -65,7 +65,7 @@ void initDataChannels() {
     APP_ERROR_CHECK(err_code);
 
     /* setup m_timer for compare event every 1ms */
-    uint32_t ticks = nrf_drv_timer_ms_to_ticks(&harvestTimer, PERIOD_MS);
+    uint32_t ticks = nrf_drv_timer_us_to_ticks(&harvestTimer, PERIOD_US);
     nrf_drv_timer_extended_compare(&harvestTimer,
                                    NRF_TIMER_CC_CHANNEL0,
                                    ticks,

@@ -3,17 +3,8 @@
 
 #include "app_fifo.h"
 #include "nrf_spi_mngr.h"
+#include "nrf_twi_mngr.h"
 #include "imu.h"
-
-#define ICM_SPI_TRANSACTION(_begin_callback, _end_callback, _p_transfers, _number_of_transfers)   \
-{                                                                               \
-    .begin_callback         = (nrf_spi_mngr_callback_begin_t) _begin_callback,  \
-    .end_callback           = (nrf_spi_mngr_callback_end_t)   _end_callback,    \
-    .p_user_data            = NULL,                                             \
-    .p_transfers            = (nrf_spi_mngr_transfer_t const *) _p_transfers,   \
-    .number_of_transfers    = (uint8_t) _number_of_transfers,                   \
-    .p_required_spi_cfg     = NULL,                                             \
-}
 
 typedef enum ICMBank_t {
     BANK_0,
@@ -52,20 +43,16 @@ typedef enum ICMRegBank0_t {
     FIFO_COUNTH = 0x70,
     FIFO_COUNTL,
     FIFO_R_W,
-    BANK0_BANK_SEL = 0x7F
-} ICMRegBank0_t;
-
-typedef enum ICMRegBank1_t {
+    BANK0_BANK_SEL = 0x7F,
+    // BANK 1
     XA_OFFSET_H = 0x14,
     XA_OFFSET_L = 0x15,
     YA_OFFSET_H = 0x17,
     YA_OFFSET_L = 0x18,
     ZA_OFFSET_H = 0x1A,
     ZA_OFFSET_L = 0x1B,
-    BANK1_BANK_SEL = 0x7F
-} ICMRegBank1_t;
-
-typedef enum ICMRegBank2_t {
+    BANK1_BANK_SEL = 0x7F,
+    // BANK 2
     GYRO_SMPLRT_DIV = 0x00,
     GYRO_CONFIG_1,
     GYRO_CONFIG_2,
@@ -83,10 +70,8 @@ typedef enum ICMRegBank2_t {
     ACCEL_CONFIG_1,
     ACCEL_CONFIG_2,
     TEMP_CONFIG = 0x53,
-    BANK2_BANK_SEL = 0x7F
-} ICMRegBank2_t;
-
-typedef enum ICMRegBank3_t {
+    BANK2_BANK_SEL = 0x7F,
+    // BANK 3
     I2C_MST_CTRL   = 0x01,
     I2C_SLV0_ADDR  = 0x03,
     I2C_SLV0_REG,
@@ -97,28 +82,26 @@ typedef enum ICMRegBank3_t {
     I2C_SLV4_CTRL,
     I2C_SLV4_DO,
     BANK3_BANK_SEL = 0x7F
-} ICMRegBank3_t;
-
-typedef union ICMReg_t {
-    ICMRegBank0_t reg0;
-    ICMRegBank1_t reg1;
-    ICMRegBank2_t reg2;
-    ICMRegBank3_t reg3;
 } ICMReg_t;
 
+
+#ifdef FANTM_USE_I2C
+    typedef nrf_twi_mngr_transaction_t ICMTransaction_t;
+    typedef nrf_twi_mngr_transfer_t    ICMTransfer_t;
+#else
+    typedef nrf_spi_mngr_transaction_t ICMTransaction_t;
+    typedef nrf_spi_mngr_transfer_t    ICMTransfer_t;
+#endif
+
 ret_code_t writeICM(ICMReg_t *reg,  uint8_t *data);
-ret_code_t readICM(ICMReg_t *reg,  nrf_spi_mngr_transaction_t *transaction, Data_t *outBuffer,  void (*endHandler)(ret_code_t, void *));
+ret_code_t readDataICM(Data_t *outBuffer,  void (*endHandler)(ret_code_t, void *));
 ret_code_t synchReadICM(ICMReg_t *reg, size_t size, uint8_t *data);
 ret_code_t changeBank(ICMBank_t bank);
 
 typedef struct HandlerParameters_t {
-    uint8_t reg1;
-    uint8_t reg2;
     Data_t *out;
-    uint8_t *cmdBuff;
     uint8_t *recvBuff;
 } HandlerParameters_t;
-
 
 /**
  * Initialize the ICM20948 9 axis IMU 

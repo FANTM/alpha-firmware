@@ -118,23 +118,17 @@ static ret_code_t initDataStore(void) {
     return NRF_SUCCESS;
 }
 
-static ret_code_t readData(void) {
-    ICMReg_t reg = {.reg0 = ACCEL_X_H};
-    static nrf_spi_mngr_transaction_t transaction;
-    return readICM(&reg, &transaction, &dataStore, allDataHandler);
-}
-
 ret_code_t getPwrMgmt(void) {
-    ICMReg_t pwrMgmt = {.reg0 = PWR_MGMT_1};
-    static nrf_spi_mngr_transaction_t transaction;
-    return readICM(&pwrMgmt, &transaction, NULL, genericEndReadHandler);
+    ICMReg_t pwrMgmt = PWR_MGMT_1;
+    uint8_t data[2] = {0xff, 0xff};
+    return synchReadICM(&pwrMgmt, 2, data);
 }
 
 /**
  * Pulls in the most recent Acc/Gyro/Mag/Temp readings
  */ 
 ret_code_t updateAGMT(void) {
-    return readData();
+    return readDataICM(&dataStore, allDataHandler);
 }
 
 void reduceAGMT() {

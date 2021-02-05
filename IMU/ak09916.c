@@ -65,7 +65,7 @@ static ret_code_t setAK0DataRate(AK09916_Data_Rate_t dataRate) {
 
 static ret_code_t setAK0Reg(AKReg_t reg) {
     changeBank(BANK_3);
-    ICMReg_t slvReg = {.reg3 = I2C_SLV4_REG};
+    ICMReg_t slvReg = I2C_SLV4_REG;
     uint8_t bitmask[] = {
         BIT_MASK(reg, 0), BIT_MASK(reg, 1), BIT_MASK(reg, 2), BIT_MASK(reg, 3), 
         BIT_MASK(reg, 4), BIT_MASK(reg, 5), BIT_MASK(reg, 6), BIT_MASK(reg, 7)
@@ -92,13 +92,13 @@ static ret_code_t setAK0RW(bool read) {
         bitmask[7] = 0;
     }
 
-    ICMReg_t reg = {.reg3 = I2C_SLV4_ADDR};
+    ICMReg_t reg = I2C_SLV4_ADDR;
     return writeICM(&reg, bitmask);
 }
 
 static ret_code_t setAK0DataOut(uint8_t data) {
     changeBank(BANK_3);
-    ICMReg_t reg = {.reg3 = I2C_SLV4_DO};
+    ICMReg_t reg = I2C_SLV4_DO;
     uint8_t bitmask[] = {
         BIT_MASK(data, 0),
         BIT_MASK(data, 1),
@@ -121,14 +121,14 @@ static ret_code_t writeAK0(AKReg_t reg, uint8_t data) {
     uint8_t ctrlBitmask[] = { 
         0, 0, 0, 0, 0, 0, 0, 1  // 0x80
     };
-    ICMReg_t wrreg = {.reg3 = I2C_SLV4_CTRL};
+    ICMReg_t wrreg = I2C_SLV4_CTRL;
     return writeICM(&wrreg, ctrlBitmask);
 }
 
 static ret_code_t configI2CMaster(void) {
     changeBank(BANK_3);
     ret_code_t errCode;
-    ICMReg_t reg = {.reg3 = I2C_MST_CTRL};
+    ICMReg_t reg = I2C_MST_CTRL;
     uint8_t bitmask[] = { // 0x17
         1, 1, 1, 0, //0x07
         1, 0, 0, 0  //0x10
@@ -138,7 +138,7 @@ static ret_code_t configI2CMaster(void) {
     
     changeBank(BANK_0);
     uint8_t ctrlBitmask[] = {2, 2, 2, 2, 2, 1, 2, 2};
-    ICMReg_t config = {.reg0 = USER_CTRL};
+    ICMReg_t config = USER_CTRL;
     
     return writeICM(&config, ctrlBitmask);
 }
@@ -190,10 +190,10 @@ ret_code_t calibrateAK09916(int32_t *magBias, int32_t *magScale) {
 ret_code_t synchReadAK0Data(int16_t *dest) {
     uint8_t rawResult[8];
     uint8_t statusByte[1];
-    ICMReg_t reg = {.reg0=EXT_SLV_SENS_DATA_00};
+    ICMReg_t reg = EXT_SLV_SENS_DATA_00;
     ret_code_t errCode = synchReadICM(&reg, 1, statusByte);
     if (statusByte[0] & 0x01) {
-        reg.reg0 = EXT_SLV_SENS_DATA_01;
+        reg = EXT_SLV_SENS_DATA_01;
         errCode = synchReadICM(&reg, 8, rawResult);
         uint8_t status2 = rawResult[7];
         if (!(status2 & 0x08)) {
@@ -217,7 +217,7 @@ ret_code_t initAK09916() {
     if ((errCode = setAK0DataRate(AK09916_MAG_DATARATE_100_HZ)) != NRF_SUCCESS)
         return errCode;
 
-    ICMReg_t reg = {.reg3 = I2C_SLV0_ADDR};
+    ICMReg_t reg = I2C_SLV0_ADDR;
     uint8_t addrBitmask[] = {
         BIT_MASK(AK09916_ADDR, 0),
         BIT_MASK(AK09916_ADDR, 1),
@@ -231,7 +231,7 @@ ret_code_t initAK09916() {
     if ((errCode = writeICM(&reg, addrBitmask)) != NRF_SUCCESS)
         return errCode;
 
-    reg.reg3 = I2C_SLV0_REG;
+    reg = I2C_SLV0_REG;
     uint8_t regBitmask[] = {
         BIT_MASK(STATUS_1, 0),
         BIT_MASK(STATUS_1, 1),
@@ -245,7 +245,7 @@ ret_code_t initAK09916() {
     if ((errCode = writeICM(&reg, regBitmask)) != NRF_SUCCESS)
         return errCode;
 
-    reg.reg3 = I2C_SLV0_CTRL;
+    reg = I2C_SLV0_CTRL;
     uint8_t ctrlBitmask[] = { 
         1, 0, 0, 1, 0, 0, 0, 1  // 0x89 <- enable + read 9 bytes at a time
     };

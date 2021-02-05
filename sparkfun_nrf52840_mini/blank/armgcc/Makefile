@@ -76,6 +76,10 @@ SRC_FILES += \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
+  $(SDK_ROOT)/components/libraries/twi_mngr/nrf_twi_mngr.c \
+  $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_twi.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twi.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twim.c \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/IMU/ak09916.c \
   $(PROJ_DIR)/IMU/icm20948.c \
@@ -167,6 +171,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/sortlist \
   $(SDK_ROOT)/components/libraries/spi_mngr \
   $(SDK_ROOT)/components/libraries/memobj \
+  $(SDK_ROOT)/components/libraries/twi_mngr \
   $(SDK_ROOT)/integration/nrfx \
   $(SDK_ROOT)/external/thedotfactory_fonts \
   $(SDK_ROOT)/modules/nrfx/drivers/include \

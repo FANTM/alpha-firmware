@@ -12,24 +12,10 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 
-void startReadHandler(void * userData) {
-    HandlerParameters_t *params = (HandlerParameters_t *) userData;
-    params->cmdBuff[0] = params->reg1;
-    params->cmdBuff[1] = params->reg2;
-}
-
-void startWriteHandler(void *userData) {
-    HandlerParameters_t *params = (HandlerParameters_t *) userData;
-    params->cmdBuff[0] = params->reg1;
-    params->cmdBuff[1] = params->reg2;
-    free(userData);  // Dont get any data returned on a write, so we free these right away
-}
-
-void genericEndReadHandler(ret_code_t resultCode, void * userData) {
+void debugEndHandler(ret_code_t resultCode, void * userData) {
     NRF_LOG_INFO("Result: %d\n\r", resultCode);
     HandlerParameters_t *params = (HandlerParameters_t *) userData;
     NRF_LOG_INFO("Returned data: %d %d", params->recvBuff[0], params->recvBuff[1]);
-    free(userData);
     return;
 }
 
@@ -82,5 +68,4 @@ void allDataHandler(ret_code_t resultCode, void *userData) {
     safeAppFifoPut(&dataStore->magZ, params->recvBuff[21]);   // MAGZ_H
     safeAppFifoPut(&dataStore->magZ, params->recvBuff[20]);   // MAGZ_L
 
-    free(userData);
 }
