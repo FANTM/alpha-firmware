@@ -7,10 +7,12 @@
 
 #include "icm20948.h"
 
-#define NRF_LOG_MODULE_NAME fantm
+
+#define NRF_LOG_MODULE_NAME FANTM_IMU
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
+
 
 void debugEndHandler(ret_code_t resultCode, void * userData) {
     NRF_LOG_INFO("Result: %d\n\r", resultCode);

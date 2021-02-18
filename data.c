@@ -1,6 +1,5 @@
 #include "boards.h"
 #include "nrf.h"
-#include "nrf_drv_saadc.h"
 #include "nordic_common.h"
 #include "nrf_drv_ppi.h"
 #include "nrf_drv_timer.h"
@@ -17,7 +16,7 @@
 #include "nrf_log.h"
 
 #define NUM_CHANNELS 4
-#define PERIOD_US    1000
+#define PERIOD_US    10000
 
 /* Stores functions that are called in the timer loop. Other modules store their data polling callbacks here */
 static void (*dataCallbacks[NUM_CHANNELS])();

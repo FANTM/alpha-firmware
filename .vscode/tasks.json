@@ -3,9 +3,9 @@
         {
             "type": "shell",
             "label": "make project",
-            "command": "make dfu-package",
+            "command": "make -j16 dfu-package",
             "options": {
-                "cwd": "sparkfun_nrf52840_mini/blank/armgcc"
+                "cwd": "fantm-alpha/blank/armgcc"
             },
             "problemMatcher": [
                 "$gcc"
@@ -19,9 +19,9 @@
         {
             "type": "shell",
             "label": "flash micro",
-            "command": "make bootload SERIAL_PORT=COM3",
+            "command": "make bootload SERIAL_PORT=COM5",
             "options": {
-                "cwd": "sparkfun_nrf52840_mini/blank/armgcc"
+                "cwd": "fantm-alpha/blank/armgcc"
             },
             "problemMatcher": [
                 "$gcc"

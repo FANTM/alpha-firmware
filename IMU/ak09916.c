@@ -9,7 +9,7 @@
 #include "imu_handlers.h"
 #include "util.h"
 
-#define NRF_LOG_MODULE_NAME fantm
+#define NRF_LOG_MODULE_NAME FANTM_IMU
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"

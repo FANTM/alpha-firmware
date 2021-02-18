@@ -108,10 +108,6 @@ typedef struct HandlerParameters_t {
  */
 ret_code_t initIcm20948(void);
 
-ret_code_t wakeUpICM(void);
-
-ret_code_t sleepICM(void);
-
 ret_code_t configICM(void);
 
 #endif

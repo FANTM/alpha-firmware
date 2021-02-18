@@ -1,6 +1,4 @@
 #include "app_util_platform.h"
-#include "nrf_delay.h"
-#include "nrf_spi_mngr.h"
 #include "boards.h"
 #include "nordic_common.h"
 #include "app_fifo.h"
@@ -11,10 +9,16 @@
 #include "data.h"
 #include "packet.h" 
 
-#define NRF_LOG_MODULE_NAME fantm
-
+#define NRF_LOG_MODULE_NAME FANTM_IMU
+#if (FANTM_IMU_LOG_ENABLED)
+#define NRF_LOG_LEVEL       6
+#else
+#define NRF_LOG_LEVEL       0
+#endif
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
+NRF_LOG_MODULE_REGISTER();
+
 
 #define WINDOW_SIZE 16
 
@@ -115,13 +119,28 @@ static ret_code_t initDataStore(void) {
     if ((errCode = app_fifo_init(&(dataStore.temp), tempBuff, (uint16_t) sizeof(tempBuff))) != NRF_SUCCESS)
         return errCode;
 
-    return NRF_SUCCESS;
+    return errCode;
 }
 
-ret_code_t getPwrMgmt(void) {
+/**
+ * Take the ICM out of sleep mode, enabling reading outputs
+ */
+ret_code_t wakeUpICM(void)
+{
+    changeBank(BANK_0);
     ICMReg_t pwrMgmt = PWR_MGMT_1;
-    uint8_t data[2] = {0xff, 0xff};
-    return synchReadICM(&pwrMgmt, 2, data);
+    uint8_t bitmask[] = {2, 2, 2, 2, 2, 2, 0, 2};
+    return writeICM(&pwrMgmt, bitmask);
+}
+
+/**
+ * Put the ICM into low power sleep mode, all outputs beside WHOAMI will be 0
+ */
+ret_code_t sleepICM(void)
+{
+    ICMReg_t pwrMgmt = PWR_MGMT_1;
+    uint8_t bitmask[] = {2, 2, 2, 2, 2, 2, 1, 2};
+    return writeICM(&pwrMgmt, bitmask);
 }
 
 /**

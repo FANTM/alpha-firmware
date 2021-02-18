@@ -43,14 +43,14 @@
                 "${nrfSDK}/components/ble/nrf_ble_qwr",
                 "${nrfSDK}/components/softdevice/mbr",
                 "${nrfSDK}/components/softdevice/s140/headers",
-                "${workspaceFolder}/sparkfun_nrf52840_mini/blank/config/",
-                "${workspaceFolder}/sparkfun_nrf52840_mini/blank"
+                "${workspaceFolder}/fantm-alpha/blank/config/",
+                "${workspaceFolder}/fantm-alpha/blank"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "BOARD_SPARKFUN_NRF52840_MINI",
+                "BOARD_FANTM_ALPHA",
                 "BSP_DEFINES_ONLY",
                 "CONFIG_GPIO_AS_PINRESET",
                 "FLOAT_ABI_HARD",

@@ -53,7 +53,7 @@ int main(void) {
         if (printFlag) {  // Sends the data out and prints it
             reduceAGMT();
             telemetrySend(&packet);
-            //dumpPacket(&packet);
+            dumpPacket(&packet);
             printFlag = false;
         }
         nrf_pwr_mgmt_run();

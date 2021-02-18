@@ -1,7 +1,6 @@
-
 #include "boards.h"
 #include "nrf.h"
-#include "nrf_drv_saadc.h"
+#include "nrfx_saadc.h"
 #include "nordic_common.h"
 #include "nrf_drv_ppi.h"
 #include "nrf_drv_timer.h"
@@ -18,10 +17,14 @@
 
 #include "nrf_log.h"
 
-#define SAMPLES_IN_BUFFER 1  // Number of times _sample is called before we generate a "finished" callback
+#define SAMPLES_IN_BUFFER 16  // Number of times _sample is called before we generate a "finished" callback
+#define CHANNEL_COUNT 1
 
 /* Stores the read samples */
-static nrf_saadc_value_t     m_buffer_pool[2][SAMPLES_IN_BUFFER];
+static nrf_saadc_value_t m_buffer_pool[CHANNEL_COUNT];
+static nrfx_saadc_channel_t channels[CHANNEL_COUNT] = {
+    NRFX_SAADC_DEFAULT_CHANNEL_SE(NRF_SAADC_INPUT_AIN2, 2)
+};
 
 static Packet_t *myoPacket = NULL;  // Data packet defined in the main driver. -> myo field needs to be populated
 
@@ -30,29 +33,28 @@ static Packet_t *myoPacket = NULL;  // Data packet defined in the main driver. -
  * the ADC, which then triggers its own callback when the sample is collected.
  */
 static void initSamplingEvent(void) {
-    attachDataChannel((uint32_t) nrf_drv_saadc_sample, false);
+    attachDataChannel((uint32_t) nrfx_saadc_mode_trigger, false);
 }
 
 /**
  * Callback from sampling. When we are done sampling the ADC, the data is made available here.
  */ 
-static void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
+static void saadc_callback(nrfx_saadc_evt_t const * p_event)
 {
-    if (p_event->type == NRF_DRV_SAADC_EVT_DONE)
+    if (p_event->type == NRFX_SAADC_EVT_DONE)
     {
         ret_code_t err_code;
-
-        err_code = nrf_drv_saadc_buffer_convert(p_event->data.done.p_buffer, SAMPLES_IN_BUFFER);
-        APP_ERROR_CHECK(err_code);
-
         int i;
         int accumulator = 0;
-        for (i = 0; i < SAMPLES_IN_BUFFER; i++)
+        for (i = 0; i < p_event->data.done.size; i++)
         {
             accumulator += p_event->data.done.p_buffer[i];
         }
-        accumulator /= SAMPLES_IN_BUFFER;
+        accumulator /= p_event->data.done.size;
         myoPacket->myo = (uint16_t) accumulator;
+
+        nrfx_saadc_buffer_set(p_event->data.done.p_buffer, p_event->data.done.size);
+        //nrfx_saadc_mode_trigger();
     }
 }
 
@@ -63,20 +65,36 @@ static void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 static void initSaadc(void)
 {
     ret_code_t err_code;
-    nrf_saadc_channel_config_t channel_config =
-        NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN2);
+    NRF_LOG_INFO("TASK 1");
+    //nrfx_saadc_channel_t channel_config =
+    //    NRFX_SAADC_DEFAULT_CHANNEL_SE((nrf_saadc_input_t)NRF_SAADC_INPUT_AIN2, 0);
+    //NRF_LOG_INFO("TASK 2");
 
-    err_code = nrf_drv_saadc_init(NULL, saadc_callback);
+    //err_code = nrfx_saadc_init(NULL, saadc_callback);
+    err_code = nrfx_saadc_init(NRFX_SAADC_CONFIG_IRQ_PRIORITY);
     APP_ERROR_CHECK(err_code);
+    NRF_LOG_INFO("TASK 3");
 
-    err_code = nrf_drv_saadc_channel_init(0, &channel_config);
+    err_code = nrfx_saadc_channels_config(channels, CHANNEL_COUNT);
     APP_ERROR_CHECK(err_code);
+    NRF_LOG_INFO("TASK 4");
 
-    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[0], SAMPLES_IN_BUFFER);
+    err_code = nrfx_saadc_simple_mode_set(
+        (1 << 2), 
+        NRFX_SAADC_CONFIG_RESOLUTION,
+        NRFX_SAADC_CONFIG_OVERSAMPLE, 
+        saadc_callback);
     APP_ERROR_CHECK(err_code);
+    NRF_LOG_INFO("TASK 5");
 
-    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1], SAMPLES_IN_BUFFER);
-    APP_ERROR_CHECK(err_code);
+    err_code = nrfx_saadc_buffer_set(m_buffer_pool, CHANNEL_COUNT);
+    NRF_LOG_INFO("ERR CODE: %d", err_code);
+
+    ///err_code = nrfx_saadc_buffer_set(m_buffer_pool[1], SAMPLES_IN_BUFFER);
+    //NRF_LOG_INFO("ERR CODE: %d", err_code);
+    //APP_ERROR_CHECK(err_code);
+    NRF_LOG_INFO("TASK 6");
+
 }
 
 /**
@@ -84,7 +102,8 @@ static void initSaadc(void)
  */ 
 ret_code_t initMyoware(Packet_t *packet) {
     initSaadc();
-    initSamplingEvent();
     myoPacket = packet;
+    //nrfx_saadc_mode_trigger();
+    initSamplingEvent();
     return NRF_SUCCESS;
 }

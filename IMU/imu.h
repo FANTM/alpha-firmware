@@ -16,6 +16,10 @@ ret_code_t updateAGMT(void);
 
 void reduceAGMT();
 
+ret_code_t wakeUpICM(void);
+
+ret_code_t sleepICM(void);
+
 typedef struct Data_t {
     app_fifo_t accelX;
     app_fifo_t accelY;

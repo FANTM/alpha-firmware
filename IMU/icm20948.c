@@ -15,7 +15,7 @@
 #include "nrf_spi_mngr.h"
 #endif
 
-#define NRF_LOG_MODULE_NAME fantm
+#define NRF_LOG_MODULE_NAME FANTM_IMU
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -59,7 +59,7 @@ static ret_code_t initInterfaceManager(void) {
         {
             .scl = ARDUINO_5_PIN,
             .sda = ARDUINO_4_PIN,
-            .frequency = NRF_DRV_TWI_FREQ_400K,  // TODO determine if we can actually do fast mode I2C
+            .frequency = NRF_DRV_TWI_FREQ_400K,
             .interrupt_priority = APP_IRQ_PRIORITY_LOWEST,
             .clear_bus_init = false
         };
@@ -230,47 +230,6 @@ ret_code_t changeBank(ICMBank_t bank)
 }
 
 /**
- * Take the ICM out of sleep mode, enabling reading outputs
- */
-ret_code_t wakeUpICM(void)
-{
-    changeBank(BANK_0);
-    ICMReg_t pwrMgmt = PWR_MGMT_1;
-    uint8_t bitmask[] = {2, 2, 2, 2, 2, 2, 0, 2};
-    return writeICM(&pwrMgmt, bitmask);
-}
-
-/**
- * Software reset, not used currently
- */
-ret_code_t resetICM(void)
-{
-    ICMReg_t pwrMgmt = PWR_MGMT_1;
-    uint8_t bitmask[] = {1, 2, 2, 2, 2, 2, 2, 2};
-    ret_code_t errCode;
-    errCode = writeICM(&pwrMgmt, bitmask);
-
-    nrf_delay_ms(20);
-    uint8_t pwrMgmtData[1];
-    synchReadICM(&pwrMgmt, 1, pwrMgmtData);
-    while (BIT_MASK(pwrMgmtData[0], 7))
-        nrf_delay_ms(10);
-    nrf_delay_ms(50);
-
-    return errCode;
-}
-
-/**
- * Put the ICM into low power sleep mode, all outputs beside WHOAMI will be 0
- */
-ret_code_t sleepICM(void)
-{
-    ICMReg_t pwrMgmt = PWR_MGMT_1;
-    uint8_t bitmask[] = {2, 2, 2, 2, 2, 2, 1, 2};
-    return writeICM(&pwrMgmt, bitmask);
-}
-
-/**
  * Setup the USER_CTRL register
  * USER_CTRL - ADDR: 0x03 - BANK: 0x00
  * BIT | NAME       | FUNCTION (if 1 is written)
@@ -288,9 +247,9 @@ static ret_code_t configUserCtrl(void)
     changeBank(BANK_0);
     ICMReg_t config = USER_CTRL;
     #if FANTM_USE_I2C
-    uint8_t bitmask[] = {2, 0, 0, 1, 0, 0, 0, 0};
+    uint8_t bitmask[] = {2, 0, 0, 1, 0, 0, 0, 0};  // Keep I2C enabled
     #else
-    uint8_t bitmask[] = {2, 0, 0, 1, 1, 0, 0, 0};
+    uint8_t bitmask[] = {2, 0, 0, 1, 1, 0, 0, 0};  // Disable I2C
     #endif
     return writeICM(&config, bitmask);
 }
@@ -356,7 +315,7 @@ static void resetBitmap(uint8_t *bitmask)
  * It's ugly, it's long, but the device is a pain in the butt to work with so that's how 
  * it is.
  */
-ret_code_t calibrateIcm20948(float *outGyroBias, float *outAccelBias)
+static ret_code_t calibrateIcm20948(float *outGyroBias, float *outAccelBias)
 {
     ret_code_t errCode = NRF_SUCCESS;
     size_t dataSize = 12;
@@ -724,8 +683,6 @@ ret_code_t initIcm20948(void)
     APP_ERROR_CHECK(configICM());
     APP_ERROR_CHECK(calibrateIcm20948(gyroBias, accelBias));
     
-    //nrf_delay_ms(50);
-
     APP_ERROR_CHECK(changeBank(BANK_0));
 
     return NRF_SUCCESS;
